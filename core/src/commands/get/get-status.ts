@@ -22,6 +22,7 @@ import { joi, joiIdentifierMap, joiStringMap } from "../../config/common"
 import { environmentStatusSchema } from "../../config/status"
 import { printHeader } from "../../logger/util"
 import { testFromConfig } from "../../types/test"
+import { emitStackGraphEvent } from "../helpers"
 
 export interface TestStatuses {
   [testKey: string]: RunStatus
@@ -66,7 +67,12 @@ export class GetStatusCommand extends Command {
     printHeader(headerLog, "Get status", "pager")
   }
 
-  async action({ garden, log, opts }: CommandParams): Promise<CommandResult<StatusCommandResult>> {
+  async action({
+    garden,
+    isWorkflowStepCommand,
+    log,
+    opts,
+  }: CommandParams): Promise<CommandResult<StatusCommandResult>> {
     const actions = await garden.getActionRouter()
     const graph = await garden.getConfigGraph(log)
 
@@ -81,6 +87,9 @@ export class GetStatusCommand extends Command {
     }
 
     if (opts.output) {
+      if (!isWorkflowStepCommand) {
+        emitStackGraphEvent(garden, graph)
+      }
       result = {
         ...result,
         ...(await Bluebird.props({
