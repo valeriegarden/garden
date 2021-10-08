@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2018-2021 Garden Technologies, Inc. <info@garden.io>
+  Copyright (C) 2018-2021 Garden Technologies, Inc. <info@garden.io>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import WebSocket from "ws"
 import { IncomingHttpHeaders } from "http"
 
 import { got, GotHeaders, GotHttpError, GotJsonOptions } from "../util/http"
@@ -400,6 +401,15 @@ export class EnterpriseApi {
       ...res.body,
       headers: res.headers,
     }
+  }
+
+  async wsConnect(sessionId: string) {
+    const authToken = await EnterpriseApi.getAuthToken(this.log)
+    const tokenParam = !!gardenEnv.GARDEN_AUTH_TOKEN ? "ciToken" : "accessToken"
+    const ws = new WebSocket(
+      `wss://eysi.dev.enterprise.garden.io/ws/cli?${tokenParam}=${authToken}&sessionId=${sessionId}`
+    )
+    return ws
   }
 
   async get<T>(path: string, opts: ApiFetchOptions = {}) {
