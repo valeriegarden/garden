@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import WebSocket from "ws"
 import Bluebird from "bluebird"
 import { omit } from "lodash"
 
@@ -159,6 +160,32 @@ export class BufferedEventStream {
     this.log.silly("BufferedEventStream: Connected")
 
     this.startInterval()
+    // this.connectWs()
+  }
+
+  connectWs() {
+    // const url = "eysi.dev.enterprise.garden.io/ws/pub"
+    console.log("will init ws")
+    // const ws = new WebSocket(`ws://${url}`)
+    const ws = new WebSocket(`wss://eysi.dev.enterprise.garden.io/ws/pub`)
+    console.log("did init ws")
+    // Helper to make JSON messages, make them type-safe, and to log errors.
+    ws.on("error", (err) => {
+      console.log("ws err", JSON.stringify(err))
+    })
+    const send = (type: string, payload: any) => {
+      console.log("would emit event of type", type)
+      ws.send(JSON.stringify({ type, ...(<object>payload) }))
+      // ws.send(JSON.stringify({ type, ...(<object>payload) }), (err) => {
+      //   if (err) {
+      //     const error = toGardenError(err)
+      //     this.debugLog.debug({ error })
+      //   }
+      // })
+    }
+    // Pipe everything from the event bus to the socket, as well as from the /events endpoint
+    const eventListener = (name: EventName, payload: any) => send("event", { name, payload })
+    this.garden.events.onAny(eventListener)
   }
 
   subscribeToGardenEvents(eventBus: EventBus) {
