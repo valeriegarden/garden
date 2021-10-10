@@ -6,12 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import WebSocket from "ws"
 import Bluebird from "bluebird"
 import deline = require("deline")
 import dedent = require("dedent")
 import chalk from "chalk"
 import { readFile } from "fs-extra"
-import { flatten, isEmpty } from "lodash"
+import { flatten, isEmpty, omit } from "lodash"
 import moment = require("moment")
 import { join } from "path"
 
@@ -43,6 +44,12 @@ import { Garden } from "../garden"
 import { LogEntry } from "../logger/log-entry"
 import { StringsParameter, BooleanParameter } from "../cli/params"
 import { printHeader } from "../logger/util"
+import { GardenService } from "../types/service"
+import { Stream } from "ts-stream"
+import { ServiceLogEntry } from "../types/plugin/service/getServiceLogs"
+import { ActionRouter } from "../actions"
+import { PluginEventBroker } from "../plugin-context"
+import { skipEntry } from "./logs"
 
 const ansiBannerPath = join(STATIC_DIR, "garden-banner-2.txt")
 
@@ -177,6 +184,16 @@ export class DevCommand extends Command<DevCommandArgs, DevCommandOpts> {
       sessionSettings: settings,
     })
 
+    const ws = await wsConnect(garden)
+    if (ws) {
+      const actions = await garden.getActionRouter()
+      startLogStream({ ws, graph, log, actions })
+        .then(() => {
+          log.silly(`Started log stream`)
+        })
+        .catch((err) => log.error(`Streaming logs failed with error: ${err}`))
+    }
+
     const results = await processModules({
       garden,
       graph,
@@ -200,6 +217,91 @@ export class DevCommand extends Command<DevCommandArgs, DevCommandOpts> {
 
     return handleProcessResults(footerLog, "dev", results)
   }
+}
+
+async function startLogStream({
+  ws,
+  graph,
+  log,
+  actions,
+}: {
+  ws: WebSocket
+  graph: ConfigGraph
+  log: LogEntry
+  actions: ActionRouter
+}) {
+  const services = graph.getServices()
+  const stream = new Stream<ServiceLogEntry>()
+  const events = new PluginEventBroker()
+
+  void stream.forEach((entry) => {
+    // Skip empty entries
+    if (skipEntry(entry)) {
+      return
+    }
+
+    ws.readyState === 1 &&
+      ws.send(
+        JSON.stringify({
+          type: "serviceLog",
+          name: "serviceLog",
+          message: entry.msg,
+          serviceName: entry.serviceName,
+          timestamp: entry.timestamp?.getTime(),
+        })
+      )
+  })
+
+  await Bluebird.map(services, async (service: GardenService<any>) => {
+    await actions.getServiceLogs({
+      log,
+      graph,
+      service,
+      stream,
+      follow: true,
+      since: "10s",
+      events,
+    })
+  })
+}
+
+async function wsConnect(garden: Garden) {
+  const validEvents = ["deployRequested", "buildRequested", "testRequested"]
+  let ws: WebSocket | null = null
+  if (garden.enterpriseApi) {
+    ws = await garden.enterpriseApi.wsConnect(garden.sessionId)
+    ws.on("open", () => {
+      // console.log("ws open")
+    })
+    ws.on("close", () => {
+      // console.log("ws closed")
+    })
+    ws.on("upgrade", () => {
+      // console.log("ws upgraded")
+    })
+    ws.on("ping", () => {
+      ws && ws.pong()
+    })
+    ws.on("error", (err) => {
+      console.log("ws err", err)
+      console.log("ws err string", JSON.stringify(err))
+    })
+    ws.on("message", (msg) => {
+      const parsed = JSON.parse(msg.toString())
+      console.log(parsed)
+      if (validEvents.includes(parsed.event)) {
+        const payload = omit(parsed, "event")
+        garden.events.emit(parsed.event, payload)
+      }
+    })
+
+    garden.events.onAny((name, payload) => {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: "event", name, ...payload }))
+      }
+    })
+  }
+  return ws
 }
 
 export async function getDevCommandInitialTasks({
