@@ -31,6 +31,13 @@ import { LogEntry } from "../logger/log-entry"
 import { StringsParameter, BooleanParameter } from "../cli/params"
 import { printHeader } from "../logger/util"
 import { GardenService } from "../types/service"
+import { ActionRouter } from "../actions"
+import { EventBus } from "../events"
+import { Stream } from "ts-stream"
+import { ServiceLogEntry } from "../types/plugin/service/getServiceLogs"
+import { PluginEventBroker } from "../plugin-context"
+import { skipEntry } from "./logs"
+import { sleep } from "../util/util"
 
 const ansiBannerPath = join(STATIC_DIR, "garden-banner-2.txt")
 
@@ -170,6 +177,17 @@ export class DevCommand extends Command<DevCommandArgs, DevCommandOpts> {
       forceDeploy: opts.force,
     })
 
+    const actions = await garden.getActionRouter()
+    startLogStream({ graph, log, actions, events: garden.events })
+      .then(() => {
+        console.log("started log stream")
+        log.silly(`Started log stream`)
+      })
+      .catch((err) => {
+        log.error(`Streaming logs failed with error: ${err}`)
+        console.log("starting log stream failed with error", err)
+      })
+
     const results = await processModules({
       garden,
       graph,
@@ -196,6 +214,52 @@ export class DevCommand extends Command<DevCommandArgs, DevCommandOpts> {
 
     return handleProcessResults(footerLog, "dev", results)
   }
+}
+
+async function startLogStream({
+  graph,
+  log,
+  actions,
+  events,
+}: {
+  graph: ConfigGraph
+  log: LogEntry
+  actions: ActionRouter
+  events: EventBus
+}) {
+  // Awful hack to prevent issues when we try to stream logs from Helm charts
+  // that haven't been rendered. There's already a PR with a fix.
+  await sleep(3000)
+  const services = graph.getServices()
+  const stream = new Stream<ServiceLogEntry>()
+  const pluginEvents = new PluginEventBroker()
+
+  void stream.forEach((entry) => {
+    // Skip empty entries
+    if (skipEntry(entry)) {
+      return
+    }
+
+    events.emit("serviceLog", {
+      type: "serviceLog",
+      name: "serviceLog",
+      message: entry.msg,
+      serviceName: entry.serviceName,
+      timestamp: entry.timestamp?.getTime(),
+    })
+  })
+
+  await Bluebird.map(services, async (service: GardenService<any>) => {
+    await actions.getServiceLogs({
+      log,
+      graph,
+      service,
+      stream,
+      follow: true,
+      since: "10s",
+      events: pluginEvents,
+    })
+  })
 }
 
 export async function getDevCommandInitialTasks({

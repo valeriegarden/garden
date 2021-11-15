@@ -300,7 +300,17 @@ export class GardenServer {
 
       // Helper to make JSON messages, make them type-safe, and to log errors.
       const send = <T extends ServerWebsocketMessageType>(type: T, payload: ServerWebsocketMessages[T]) => {
-        const event = { type, ...(<object>payload) }
+        let event: any
+        if ((<any>payload).name === "serviceLog") {
+          event = {
+            type: "serviceLog",
+            name: "serviceLog",
+            ...(<any>payload).payload,
+          }
+        } else {
+          event = { type, ...(<object>payload) }
+        }
+        // const event = { type, ...(<object>payload) }
         this.log.debug(`Send event: ${JSON.stringify(event)}`)
         websocket.send(JSON.stringify(event), (err) => {
           if (err) {

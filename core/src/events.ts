@@ -265,6 +265,13 @@ export interface Events extends LoggerEvents {
     index: number
     durationMsec: number
   }
+  serviceLog: {
+    type: string
+    name: string
+    message: string
+    serviceName: string
+    timestamp?: number
+  }
 }
 
 export type EventName = keyof Events
@@ -308,4 +315,5 @@ export const pipedEventNames: EventName[] = [
   "workflowStepError",
   "workflowStepProcessing",
   "workflowStepSkipped",
+  "serviceLog",
 ]
