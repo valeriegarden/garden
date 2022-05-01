@@ -163,7 +163,10 @@ export class GardenServer {
     const http = new Router()
 
     http.use((ctx, next) => {
-      const authToken = ctx.header[authTokenHeader] || ctx.query.key
+      // Need to fallback on "x-access-auth-token" header for the case when using Garden Cloud
+      // but the request comes from the Core dashboard. In that case the 'authTokenHeader' value is "x-ci-token"
+      // but the dashboard still uses the "x-access-auth-token" header.
+      const authToken = ctx.header[authTokenHeader] || ctx.header["x-access-auth-token"] || ctx.query.key
 
       if (authToken !== this.authKey) {
         ctx.throw(401, `Unauthorized request`)
