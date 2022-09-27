@@ -31,7 +31,7 @@ exports.mochaHooks = {
 
   async afterAll() {
     // tslint:disable-next-line: no-console
-    console.log(getDefaultProfiler().report())
+    // console.log(getDefaultProfiler().report())
     await Bluebird.map(Object.values(testProjectTempDirs), (d) => d.cleanup())
   },
 

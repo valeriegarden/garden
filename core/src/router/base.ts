@@ -214,6 +214,12 @@ export abstract class BaseActionRouter<K extends ActionKind> extends BaseRouter 
         this.definitions[spec.name] = spec
         for (const handlerType of handlerNames) {
           const handler = spec.handlers[handlerType]
+          console.log("1", {
+            pluginName: plugin.name,
+            handlerType,
+            specName: spec.name,
+            handlerName: handler && handler.name ? handler.name : "NAME UNDEFINED",
+          })
           handler && this.addHandler(plugin, handlerType, spec.name, handler)
         }
       }
@@ -222,10 +228,13 @@ export abstract class BaseActionRouter<K extends ActionKind> extends BaseRouter 
       for (const spec of extended) {
         for (const handlerType of handlerNames) {
           const handler = spec.handlers[handlerType]
+          console.log("2", { pluginName: plugin.name, handlerType, specName: spec.name })
           handler && this.addHandler(plugin, handlerType, spec.name, handler)
         }
       }
     }
+
+    console.log("router construction finished")
   }
 
   async configure({ config, log }: { config: BaseActionConfig; log: LogEntry }) {
@@ -240,7 +249,7 @@ export abstract class BaseActionRouter<K extends ActionKind> extends BaseRouter 
 
     const handler = await this.getHandler({
       handlerType: "configure",
-      actionType: config.type,
+      actionType: config.kind,
       defaultHandler,
     })
 
@@ -391,6 +400,11 @@ export abstract class BaseActionRouter<K extends ActionKind> extends BaseRouter 
     const handlers: WrappedActionTypeHandler<ActionTypeClasses<K>[T], T>[] = Object.values(
       this.handlers[handlerType][actionType] || {}
     )
+    console.log({ definitions: Object.getOwnPropertyNames(this.definitions), actionType })
+    // definitions: [ 'exec', 'container', 'test-plugin' ],
+    // actionType: 'test'
+
+    // this spec here will be undefined
     const spec = this.definitions[actionType]
 
     if (handlers.length === 0 && spec.base && !pluginName) {

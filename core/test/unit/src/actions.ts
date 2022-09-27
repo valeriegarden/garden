@@ -23,7 +23,7 @@ import { ServiceLogEntry } from "../../../src/types/service"
 import Stream from "ts-stream"
 import { expect } from "chai"
 import { cloneDeep, omit } from "lodash"
-import { CustomObjectSchema, joi } from "../../../src/config/common"
+import { CustomObjectSchema, joi, StringMap } from "../../../src/config/common"
 import { validateSchema } from "../../../src/config/validation"
 import { ProjectConfig, defaultNamespace } from "../../../src/config/project"
 import { DEFAULT_API_VERSION } from "../../../src/constants"
@@ -34,7 +34,7 @@ import { emptyDir, pathExists, ensureFile, readFile } from "fs-extra"
 import { join } from "path"
 import { DashboardPage } from "../../../src/plugin/handlers/provider/getDashboardPage"
 import { ConfigGraph } from "../../../src/graph/config-graph"
-import { ResolvedBuildAction } from "../../../src/actions/build"
+import { BuildActionConfig, ResolvedBuildAction } from "../../../src/actions/build"
 import {
   execBuildActionSchema,
   execDeployActionSchema,
@@ -43,11 +43,12 @@ import {
 } from "../../../src/plugins/exec/config"
 import { convertModules } from "../../../src/resolve-module"
 import { actionFromConfig } from "../../../src/graph/actions"
-import { TestAction } from "../../../src/actions/test"
+import { TestAction, TestActionConfig } from "../../../src/actions/test"
 import { TestConfig } from "../../../src/config/test"
 import { findByName } from "../../../src/util/util"
-import { ResolvedRunAction } from "../../../src/actions/run"
-import { ResolvedDeployAction } from "../../../src/actions/deploy"
+import { ResolvedRunAction, RunActionConfig } from "../../../src/actions/run"
+import { DeployActionConfig, ResolvedDeployAction } from "../../../src/actions/deploy"
+import { BaseBuildSpec } from "../../../src/config/module"
 
 const now = new Date()
 
@@ -83,7 +84,6 @@ describe("ActionRouter", () => {
     actionRouter = await garden.getActionRouter()
     graph = await garden.getConfigGraph({ log: garden.log, emit: false })
     module = graph.getModule("module-a")
-    // TODO
     const actions = graph.getActions()
     const buildAction = graph.getBuild("build.module-a")
     resolvedBuildAction = await garden.resolveAction({
@@ -2085,10 +2085,86 @@ const testPlugin = createGardenPlugin({
 
         convert: async (params) => {
           validateParams(params, moduleActionDescriptions.convert.paramsSchema)
+          const { module, convertBuildDependency } = params
+          type TestPluginActionConfig =
+            | BuildActionConfig<"test", BaseBuildSpec>
+            | DeployActionConfig
+            | TestActionConfig
+            | RunActionConfig
+          const actions: TestPluginActionConfig[] = []
 
-          // TODO-G2
+          function prepareEnv(env: StringMap) {
+            return { ...module.spec.env, ...env }
+          }
 
-          return {}
+          const type = "test"
+          actions.push({
+            kind: "Build",
+            name: module.name,
+            type,
+            internal: {
+              basePath: "test",
+            },
+            spec: { ...module.spec },
+            dependencies: module.build.dependencies.map(convertBuildDependency),
+          })
+
+          module.serviceConfigs.forEach((sc) => {
+            actions.push({
+              kind: "Deploy",
+              type,
+              name: sc.name,
+              internal: {
+                basePath: "test",
+              },
+              spec: {
+                ...sc.spec,
+                env: prepareEnv(sc.spec.env),
+              },
+            })
+          })
+
+          module.testConfigs.forEach((tc) => {
+            actions.push({
+              kind: "Test",
+              type,
+              name: module.name + "-" + tc.name,
+              internal: {
+                basePath: "test",
+              },
+              spec: {
+                ...tc.spec,
+                env: prepareEnv(tc.spec.env),
+              },
+            })
+          })
+
+          module.taskConfigs.forEach((tc) => {
+            actions.push({
+              kind: "Run",
+              type,
+              name: module.name + "-" + tc.name,
+              internal: {
+                basePath: "test",
+              },
+              spec: {
+                ...tc.spec,
+                env: prepareEnv(tc.spec.env),
+              },
+            })
+          })
+
+          return {
+            group: {
+              // This is an annoying TypeScript limitation :P
+              kind: <"Group">"Group",
+              name: module.name,
+              path: module.path,
+              actions,
+              variables: module.variables,
+              varfiles: module.varfile ? [module.varfile] : undefined,
+            },
+          }
         },
 
         getModuleOutputs: async (params) => {
@@ -2105,7 +2181,7 @@ const testPlugin = createGardenPlugin({
   createActionTypes: {
     Build: [
       {
-        name: "build",
+        name: "test-plugin",
         docs: "Test Build action",
         schema: execBuildActionSchema(),
         handlers: {
@@ -2137,7 +2213,7 @@ const testPlugin = createGardenPlugin({
     ],
     Deploy: [
       {
-        name: "deploy",
+        name: "test-plugin",
         docs: "Test Deploy action",
         schema: execDeployActionSchema(),
         handlers: {
@@ -2194,7 +2270,7 @@ const testPlugin = createGardenPlugin({
     ],
     Run: [
       {
-        name: "run",
+        name: "test-plugin",
         docs: "Test Run action",
         schema: execRunActionSchema(),
         handlers: {
@@ -2243,7 +2319,7 @@ const testPlugin = createGardenPlugin({
     ],
     Test: [
       {
-        name: "test",
+        name: "test-plugin",
         docs: "Test Test action",
         schema: execTestActionSchema(),
         handlers: {
