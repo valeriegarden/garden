@@ -1,0 +1,51 @@
+kind: Project
+name: logger-test
+environments:
+  - name: local
+providers:
+  - name: exec
+
+---
+
+kind: Module
+type: exec
+local: true
+name: module-a
+include: []
+build: 
+  command: ["./sleep-and-do.sh", "'fin building module-a'"]
+
+services:
+  - name: service-a
+    deployCommand: ["./sleep-and-do.sh", "'fin deploy service-a'"]
+
+--- 
+
+kind: Module
+type: exec
+local: true
+name: module-b
+include: []
+build: 
+  command: ["./sleep-and-do.sh", "'fin building module-b'"]
+
+services:
+  - name: service-b
+    deployCommand: ["./sleep-and-do.sh", "'fin deploy service b'"]
+
+
+--- 
+
+kind: Module
+type: exec
+local: true
+name: module-c
+include: []
+build: 
+  command: ["./sleep-and-do.sh", "'fin building module-c'"]
+
+services:
+  - name: service-c1
+    deployCommand: ["./sleep-and-do.sh", "'fin deploy service-c1'"]
+  - name: service-c2
+    deployCommand: ["./sleep-and-do.sh", "'fin deploy service-c2'"]

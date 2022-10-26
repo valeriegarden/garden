@@ -70,6 +70,13 @@ export class DeployTask extends BaseTask {
     this.devModeServiceNames = devModeServiceNames
     this.hotReloadServiceNames = hotReloadServiceNames
     this.localModeServiceNames = localModeServiceNames
+    // TODO: Set in the base task constructor
+    this.log = log.placeholder()
+    this.log.setActionMetadata({
+      actionName: "deploy",
+      entityName: this.service.name,
+    })
+
   }
 
   async resolveDependencies() {

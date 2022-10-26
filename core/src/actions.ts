@@ -118,6 +118,32 @@ type TypeGuard = {
   readonly [P in keyof (PluginActionParams | ModuleActionParams<any>)]: (...args: any[]) => Promise<any>
 }
 
+function ExperimentalLog(operation?: string) {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return (target: Object, propertyKey: string, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value
+    descriptor.value = async function(...args: any[]) {
+      try {
+        // console.log("Will do thing")
+        const isAsync = originalMethod.constructor.name === "AsyncFunction"
+        let result: any
+        if (isAsync) {
+          result = await originalMethod.apply(this, args)
+        } else {
+          result = originalMethod.apply(this, args)
+        }
+        // console.log("Did thing")
+
+        return result
+      } catch (err) {
+        // Log err
+        // console.log("Thing failed")
+        throw err
+      }
+    }
+  }
+}
+
 export interface DeployServicesParams {
   graph: ConfigGraph
   log: LogEntry
@@ -539,6 +565,7 @@ export class ActionRouter implements TypeGuard {
     return result
   }
 
+  @ExperimentalLog()
   async deployService(params: ServiceActionRouterParams<DeployServiceParams>): Promise<ServiceStatus> {
     const actionUid = uuidv4()
     params.events = params.events || new PluginEventBroker()
@@ -1050,6 +1077,11 @@ export class ActionRouter implements TypeGuard {
       module: omit(module, ["_config"]),
     }
 
+    params.log.setPluginMetadata({
+      pluginName: handler.pluginName,
+      moduleType: params.module.type,
+    })
+
     log.silly(`Calling ${actionType} handler for module ${module.name}`)
 
     // TODO: figure out why this doesn't compile without the function cast
@@ -1115,6 +1147,11 @@ export class ActionRouter implements TypeGuard {
       module: omit(service.module, ["_config"]),
       runtimeContext,
     }
+
+    log.setPluginMetadata({
+      pluginName: handlerParams.ctx.provider.name,
+      moduleType: module.type,
+    })
 
     log.silly(`Calling ${actionType} handler for service ${service.name}`)
 

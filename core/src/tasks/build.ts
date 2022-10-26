@@ -38,6 +38,12 @@ export class BuildTask extends BaseTask {
     super({ garden, log, force, version: module.version.versionString })
     this.graph = graph
     this.module = module
+    this.log = log.placeholder()
+    this.log.setActionMetadata({
+      actionName: "build",
+      entityName: this.module.name,
+    })
+
   }
 
   static async factory(params: BuildTaskParams): Promise<BaseTask[]> {

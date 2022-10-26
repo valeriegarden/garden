@@ -16,7 +16,7 @@ import hasAnsi = require("has-ansi")
 import { LogEntry, LogEntryMessage } from "./log-entry"
 import { JsonLogEntry } from "./writers/json-terminal-writer"
 import { highlightYaml, PickFromUnion, safeDumpYaml } from "../util/util"
-import { printEmoji, formatGardenErrorWithDetail, getAllSections } from "./util"
+import { printEmoji, formatGardenErrorWithDetail, getAllSections, findSection } from "./util"
 import { LoggerType, Logger } from "./logger"
 
 type RenderFn = (entry: LogEntry) => string
@@ -66,6 +66,20 @@ export function chainMessages(messages: LogEntryMessage[], chain: string[] = [])
   return chain.reverse()
 }
 
+function getSection(entry: LogEntry) {
+  const metadata = entry.getMetadata()
+
+  let section: string | null = null
+
+  if (metadata?.actionMetadata) {
+    section = `${metadata.actionMetadata.actionName}.${metadata.actionMetadata.entityName}`
+  } else {
+    section = findSection(entry)
+  }
+
+  return section
+}
+
 /*** RENDERERS ***/
 export function leftPad(entry: LogEntry): string {
   return "".padStart((entry.indent || 0) * 3)
@@ -87,6 +101,21 @@ export function renderError(entry: LogEntry) {
 
   const msg = chainMessages(entry.getMessages() || [])
   return isArray(msg) ? msg.join(" ") : msg || ""
+}
+
+export function renderSymbolBasicExperimental(entry: LogEntry): string {
+  const section = getSection(entry)
+  let { symbol, msg } = entry.getLatestMessage()
+
+  if (symbol === "empty") {
+    return "  "
+  }
+
+  if (!symbol && section && msg) {
+    symbol = "info"
+  }
+
+  return symbol ? logSymbols[symbol] + " " : ""
 }
 
 export function renderSymbolBasic(entry: LogEntry): string {
@@ -156,6 +185,19 @@ export function renderData(entry: LogEntry): string {
   return JSON.stringify(data, null, 2)
 }
 
+export function renderSectionExperimental(entry: LogEntry): string {
+  const style = chalk.cyan.italic
+  const { msg: msg } = entry.getLatestMessage()
+  const section = getSection(entry)
+
+  if (section && msg) {
+    return `${style(padSection(section))} → `
+  } else if (section) {
+    return style(padSection(section))
+  }
+  return ""
+}
+
 export function renderSection(entry: LogEntry): string {
   const style = chalk.cyan.italic
   const { msg: msg, section } = entry.getLatestMessage()
@@ -167,7 +209,44 @@ export function renderSection(entry: LogEntry): string {
   return ""
 }
 
-/**
+/*
+ * Formats entries for experimental writer.
+ */
+let lastRenderedEntry: null | LogEntry = null
+export function formatExperimental(entry: LogEntry): string {
+  const { msg: msg, emoji, section, symbol, data } = entry.getLatestMessage()
+  const empty = [msg, section, emoji, symbol, data].every((val) => val === undefined)
+
+  if (entry.isPlaceholder || empty) {
+    return ""
+  }
+
+  lastRenderedEntry = entry
+
+  return combineRenders(entry, [
+    renderTimestamp,
+    renderSymbolBasicExperimental,
+    renderSectionExperimental,
+    (entry: LogEntry) => {
+      const pluginMetadata = entry.getMetadata()?.pluginMetadata
+      if (pluginMetadata) {
+        const style = chalk.cyan.italic
+        let text = pluginMetadata.moduleType
+        if (pluginMetadata.moduleType !== pluginMetadata.pluginName) {
+          text += ` (by ${pluginMetadata.pluginName})`
+        }
+        return style(`[${text}]`) + " → "
+      }
+      return ""
+    },
+    renderEmoji,
+    renderMsg,
+    renderData,
+    () => "\n",
+  ])
+}
+
+/*
  * Formats entries for both fancy writer and basic terminal writer.
  */
 export function formatForTerminal(entry: LogEntry, type: PickFromUnion<LoggerType, "fancy" | "basic">): string {
@@ -203,7 +282,7 @@ export function cleanForJSON(input?: string | string[]): string {
   return stripAnsi(inputStr).trim()
 }
 
-export function cleanWhitespace(str) {
+export function cleanWhitespace(str: string) {
   return str.replace(/\s+/g, " ")
 }
 

@@ -18,9 +18,10 @@ import { formatLogEntryForEventStream } from "../cloud/buffered-event-stream"
 import { gardenEnv } from "../constants"
 import { getEnumKeys } from "../util/util"
 import { range } from "lodash"
+import { ExperimentalWriter } from "./writers/experimental-writer"
 
-export type LoggerType = "quiet" | "basic" | "fancy" | "json"
-export const LOGGER_TYPES = new Set<LoggerType>(["quiet", "basic", "fancy", "json"])
+export type LoggerType = "quiet" | "basic" | "fancy" | "json" | "experimental"
+export const LOGGER_TYPES = new Set<LoggerType>(["quiet", "basic", "fancy", "json", "experimental"])
 
 export enum LogLevel {
   error = 0,
@@ -73,6 +74,8 @@ export function getWriterInstance(loggerType: LoggerType, level: LogLevel) {
       return new FancyTerminalWriter(level)
     case "json":
       return new JsonTerminalWriter(level)
+    case "experimental":
+      return new ExperimentalWriter(level)
     case "quiet":
       return undefined
   }

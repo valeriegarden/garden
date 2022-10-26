@@ -36,6 +36,7 @@ import { LogOutCommand } from "./logout"
 import { ToolsCommand } from "./tools"
 import { UtilCommand } from "./util/util"
 import { SelfUpdateCommand } from "./self-update"
+import { TestLoggerCommand } from "./test-logger"
 
 export const getCoreCommands = (): (Command | CommandGroup)[] => [
   new BuildCommand(),
@@ -67,6 +68,7 @@ export const getCoreCommands = (): (Command | CommandGroup)[] => [
   new UpdateRemoteCommand(),
   new UtilCommand(),
   new ValidateCommand(),
+  new TestLoggerCommand(),
 ]
 
 export function getBuiltinCommands() {

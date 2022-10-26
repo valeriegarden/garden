@@ -25,6 +25,14 @@ export type TaskLogStatus = "active" | "success" | "error"
 export interface LogEntryMetadata {
   task?: TaskMetadata
   workflowStep?: WorkflowStepMetadata
+  actionMetadata?: {
+    actionName: string
+    entityName: string
+  }
+  pluginMetadata?: {
+    pluginName: string
+    moduleType: string
+  }
 }
 
 export interface TaskMetadata {
@@ -392,5 +400,39 @@ export class LogEntry implements LogNode {
    */
   getDuration(precision: number = 2): number {
     return round((new Date().getTime() - this.timestamp.getTime()) / 1000, precision)
+  }
+
+  setActionMetadata({
+    actionName,
+    entityName,
+  }: {
+    actionName: string
+    entityName: string
+  }) {
+    const metadata = this.metadata || {}
+    this.metadata = {
+      ...metadata,
+      actionMetadata: {
+        actionName,
+        entityName,
+      },
+    }
+  }
+
+  setPluginMetadata({
+    pluginName,
+    moduleType,
+  }: {
+    pluginName: string
+    moduleType: string
+  }) {
+    const metadata = this.metadata || {}
+    this.metadata = {
+      ...metadata,
+      pluginMetadata: {
+        pluginName,
+        moduleType,
+      },
+    }
   }
 }
