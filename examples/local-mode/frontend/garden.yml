@@ -7,6 +7,13 @@ services:
     ports:
       - name: http
         containerPort: 8080
+    localMode:
+      # no command defined, the app can be started manually:
+      # > cd ../frontend-local
+      # > cd npm start --port 8082
+      ports:
+        - remote: 8080
+          local: 8082
     healthCheck:
       httpGet:
         path: /hello-frontend
