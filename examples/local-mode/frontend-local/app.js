@@ -2,8 +2,10 @@ const express = require('express');
 const request = require('request-promise')
 const app = express();
 
-const backend1ServiceEndpoint = `http://backend-1/hello-backend-1`
-const backend2ServiceEndpoint = `http://backend-2/hello-backend-2`
+// const backend1ServiceEndpoint = `http://backend-1/hello-backend-1`
+const backend1ServiceEndpoint = `http://local-mode.local.app.garden/hello-backend-1`
+// const backend2ServiceEndpoint = `http://backend-2/hello-backend-2`
+const backend2ServiceEndpoint = `http://local-mode.local.app.garden/hello-backend-2`
 
 app.get('/hello-frontend', (req, res) => res.send('Hello from the local frontend!'));
 
