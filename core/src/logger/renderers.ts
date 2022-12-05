@@ -7,6 +7,7 @@
  */
 
 import logSymbols from "log-symbols"
+import moment from "moment"
 import chalk from "chalk"
 import stripAnsi from "strip-ansi"
 import { isArray, repeat } from "lodash"
@@ -80,6 +81,12 @@ function getSection(entry: LogEntry) {
   return section
 }
 
+function formatTimestamp(ts: Date) {
+  const m = moment(ts)
+  const formatted = m.toLocaleString()
+  return formatted
+}
+
 /*** RENDERERS ***/
 export function leftPad(entry: LogEntry): string {
   return "".padStart((entry.indent || 0) * 3)
@@ -147,11 +154,11 @@ export function renderTimestamp(entry: LogEntry): string {
   return `[${getTimestamp(entry)}] `
 }
 
-export function getTimestamp(entry: LogEntry): string {
+export function getTimestamp(entry: LogEntry, formatter?: (ts: Date) => string): string {
   const { timestamp } = entry.getLatestMessage()
   let formatted = ""
   try {
-    formatted = timestamp.toISOString()
+    formatted = formatter ? formatter(timestamp) : timestamp.toISOString()
   } catch (_err) {}
 
   return formatted
@@ -212,7 +219,6 @@ export function renderSection(entry: LogEntry): string {
 /*
  * Formats entries for experimental writer.
  */
-let lastRenderedEntry: null | LogEntry = null
 export function formatExperimental(entry: LogEntry): string {
   const { msg: msg, emoji, section, symbol, data } = entry.getLatestMessage()
   const empty = [msg, section, emoji, symbol, data].every((val) => val === undefined)
@@ -220,8 +226,6 @@ export function formatExperimental(entry: LogEntry): string {
   if (entry.isPlaceholder || empty) {
     return ""
   }
-
-  lastRenderedEntry = entry
 
   return combineRenders(entry, [
     renderTimestamp,
