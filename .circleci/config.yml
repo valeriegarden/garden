@@ -288,17 +288,6 @@ jobs:
       - build_dist:
           version: edge
 
-  lint:
-    <<: *node-config
-    resource_class: large
-    steps:
-      - checkout
-      - npm_install
-      - *attach-workspace
-      - run:
-          name: lint
-          command: yarn run lint
-
   check-docs:
     <<: *node-config
     steps:
@@ -842,8 +831,6 @@ workflows:
 
       - build
       - build-dist:
-          requires: [build]
-      - lint:
           requires: [build]
       - check-docs:
           requires: [build]
