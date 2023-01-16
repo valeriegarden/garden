@@ -1,7 +1,15 @@
 const supertest = require("supertest")
 const { app } = require("../app")
 
-describe('GET /call-backend', () => {
+let foo = 0
+
+describe('GET /call-backend', async () => {
+  while (true) {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    foo += 1
+    console.log(`Foo ${foo}`)
+  }
+
   const agent = supertest.agent(app)
 
   it('should respond with a message from the backend service', (done) => {
