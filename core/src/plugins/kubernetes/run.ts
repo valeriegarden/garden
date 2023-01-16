@@ -20,11 +20,12 @@ import {
   RuntimeError,
   ConfigurationError,
   OutOfMemoryError,
+  NotFoundError,
 } from "../../exceptions"
 import { KubernetesProvider } from "./config"
 import { Writable, Readable, PassThrough } from "stream"
 import { uniqByName, sleep } from "../../util/util"
-import { ExecInPodResult, KubeApi } from "./api"
+import { ExecInPodResult, KubeApi, KubernetesError } from "./api"
 import { getPodLogs, checkPodStatus } from "./status/pod"
 import { KubernetesResource, KubernetesPod, KubernetesServerResource } from "./types"
 import { RunModuleParams } from "../../types/plugin/module/runModule"
@@ -801,6 +802,7 @@ export class PodRunner extends PodRunnerParams {
    * If tty=true, we attach to the process stdio during execution.
    *
    * @throws {OutOfMemoryError}
+   * @throws {NotFoundError}
    * @throws {TimeoutError}
    * @throws {PodRunnerError}
    * @throws {KubernetesError}
@@ -844,6 +846,7 @@ export class PodRunner extends PodRunnerParams {
   /**
    * @throws {OutOfMemoryError}
    * @throws {TimeoutError}
+   * @throws {NotFoundError}
    * @throws {PodRunnerError}
    */
   private async awaitRunningPod(params: RunParams, startedAt: Date): Promise<number | undefined> {
@@ -851,8 +854,25 @@ export class PodRunner extends PodRunnerParams {
     const { namespace, podName } = this
     const mainContainerName = this.getMainContainerName()
 
+    const notFoundErrorDetails = async (): Promise<PodErrorDetails> => ({
+      logs: await this.getMainContainerLogs(),
+    })
+
     while (true) {
-      const serverPod = await this.api.core.readNamespacedPodStatus(podName, namespace)
+      let serverPod: KubernetesServerResource<V1Pod>
+      try {
+        serverPod = await this.api.core.readNamespacedPodStatus(podName, namespace)
+      } catch (e) {
+        if (e instanceof KubernetesError) {
+          // if the pod has been deleted during execution we might run into a 404 error.
+          // Convert it to Garden NotFoundError and fetch the logs for more details.
+          if (e.statusCode === 404) {
+            throw new NotFoundError("Pod could not be found. It might have been evicted or deleted.", await notFoundErrorDetails())
+          }
+        }
+
+        throw e
+      }
       const state = checkPodStatus(serverPod)
 
       const mainContainerStatus = (serverPod.status.containerStatuses || []).find((s) => s.name === mainContainerName)
@@ -860,7 +880,7 @@ export class PodRunner extends PodRunnerParams {
       const exitReason = terminated?.reason
       const exitCode = terminated?.exitCode
 
-      const errorDetails = async (): Promise<PodErrorDetails> => ({
+      const podErrorDetails = async (): Promise<PodErrorDetails> => ({
         logs: await this.getMainContainerLogs(),
         exitCode,
         containerStatus: mainContainerStatus,
@@ -871,7 +891,7 @@ export class PodRunner extends PodRunnerParams {
       // Garden computes is "stopped". However, in those instances the exitReason is still "OOMKilled"
       // and we handle that case specifically here.
       if (exitCode === 137 || exitReason === "OOMKilled") {
-        throw new OutOfMemoryError("Pod container was OOMKilled.", await errorDetails())
+        throw new OutOfMemoryError("Pod container was OOMKilled.", await podErrorDetails())
       }
 
       if (state === "unhealthy") {
@@ -884,12 +904,12 @@ export class PodRunner extends PodRunnerParams {
           // Successfully ran the command in the main container, but returned non-zero exit code.
           if (throwOnExitCode === true) {
             // Consider it as a task execution error inside the Pod.
-            throw newExitCodePodRunnerError(await errorDetails())
+            throw newExitCodePodRunnerError(await podErrorDetails())
           } else {
             return exitCode
           }
         } else {
-          throw new PodRunnerError(`Failed to start Pod ${podName}.`, await errorDetails())
+          throw new PodRunnerError(`Failed to start Pod ${podName}.`, await podErrorDetails())
         }
       }
 
@@ -897,7 +917,7 @@ export class PodRunner extends PodRunnerParams {
       if (state === "stopped" || exitReason === "Completed") {
         if (exitCode !== undefined && exitCode !== 0) {
           if (throwOnExitCode === true) {
-            throw newExitCodePodRunnerError(await errorDetails())
+            throw newExitCodePodRunnerError(await podErrorDetails())
           } else {
             return exitCode
           }
@@ -908,7 +928,7 @@ export class PodRunner extends PodRunnerParams {
       const elapsed = (new Date().getTime() - startedAt.getTime()) / 1000
 
       if (timeoutSec && elapsed > timeoutSec) {
-        throw new TimeoutError(`Command timed out after ${timeoutSec} seconds.`, await errorDetails())
+        throw new TimeoutError(`Command timed out after ${timeoutSec} seconds.`, await podErrorDetails())
       }
 
       await sleep(800)
@@ -1077,18 +1097,17 @@ export class PodRunner extends PodRunnerParams {
     version,
     moduleName,
   }: {
-    err: any
+    err: Error
     command: string[]
     startedAt: Date
     version: string
     moduleName
   }) {
     // Some types and predicates to identify known errors
-    const knownErrorTypes = ["out-of-memory", "timeout", "pod-runner", "kubernetes"] as const
+    const knownErrorTypes = ["out-of-memory", "not-found", "timeout", "pod-runner", "kubernetes"] as const
     type KnownErrorType = typeof knownErrorTypes[number]
     // A known error is always an instance of a subclass of GardenBaseError
-    type KnownError = {
-      message: string
+    type KnownError = Error & {
       type: KnownErrorType
       detail: PodErrorDetails
     }
@@ -1108,13 +1127,13 @@ export class PodRunner extends PodRunnerParams {
       switch (error.type) {
         // The pod container exceeded its memory limits
         case "out-of-memory":
-          return error.message + (logs ? ` Here are the logs until the out-of-memory event occurred:\n\n${logs}` : "")
+          return error.stack + (logs ? ` Here are the logs until the out-of-memory event occurred:\n\n${logs}` : "")
         // Command timed out
         case "timeout":
-          return error.message + (logs ? ` Here are the logs until the timeout occurred:\n\n${logs}` : "")
+          return error.stack + (logs ? ` Here are the logs until the timeout occurred:\n\n${logs}` : "")
         // Command exited with non-zero code
         case "pod-runner":
-          let errorDesc = error.message + "\n\n"
+          let errorDesc = error.stack + "\n\n"
 
           const containerState = errorDetail.containerStatus?.state
           const terminatedContainerState = containerState?.terminated
@@ -1150,7 +1169,15 @@ export class PodRunner extends PodRunnerParams {
 
           return errorDesc
         case "kubernetes":
-          return `Unable to start command execution. Failed to initiate a runner pod with error:\n${error.message}\n\nPlease check the cluster health and network connectivity.`
+          let k8sError = `Unable to start command execution. Failed to initiate a runner pod with error:\n${error.stack}\n\nPlease check the cluster health and network connectivity.\n\n`
+
+          if (!!logs) {
+            k8sError += `Here are the logs until the error occurred:\n\n${logs}`
+          }
+
+          return k8sError
+        case "not-found":
+          return `${error.stack}\n\nLogs: ${error.detail.logs}`
         default:
           const _exhaustiveCheck: never = error.type
           return _exhaustiveCheck
@@ -1158,6 +1185,7 @@ export class PodRunner extends PodRunnerParams {
     }
 
     const log = renderError(err)
+
     return {
       log,
       moduleName,
