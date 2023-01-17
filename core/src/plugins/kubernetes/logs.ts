@@ -158,7 +158,7 @@ const defaultRetryIntervalMs = 10000
  * purposes.
  *
  * One such buffer is maintained for each container for each resource the `K8sLogFollower` instance
- * is following (and deduplication is performed separately for each followed container).
+ * is following (and deduplication is performed separately for each followed container).kubernetes/logs.ts
  *
  * Deduplication is needed e.g. when the connection with a container is lost and reestablished, and recent logs are
  * re-fetched. Some of those log entries may have the same timestamp and message as recently streamed entries,

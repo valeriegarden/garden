@@ -809,18 +809,19 @@ export class PodRunner extends PodRunnerParams {
     const { log, remove, tty } = params
 
     const startedAt = new Date()
-    const logsFollower = this.prepareLogsFollower(params)
-    const limitBytes = 1000 * 1024 // 1MB
-    logsFollower.followLogs({ limitBytes }).catch((_err) => {
-      // Errors in `followLogs` are logged there, so all we need to do here is to ensure that the follower is closed.
-      logsFollower.close()
-    })
+    // const logsFollower = this.prepareLogsFollower(params)
+    // const limitBytes = 1000 * 1024 // 1MB
+    // logsFollower.followLogs({ limitBytes }).catch((_err) => {
+    //   // Errors in `followLogs` are logged there, so all we need to do here is to ensure that the follower is closed.
+    //   logsFollower.close()
+    // })
 
     try {
       await this.createPod({ log, tty })
 
       // Wait until main container terminates
       const exitCode = await this.awaitRunningPod(params, startedAt)
+      console.log("Exit code is:", exitCode)
 
       // Retrieve logs after run
       const mainContainerLogs = await this.getMainContainerLogs()
@@ -834,7 +835,7 @@ export class PodRunner extends PodRunnerParams {
         success: exitCode === undefined || exitCode === 0,
       }
     } finally {
-      logsFollower.close()
+      // logsFollower.close()
       if (remove) {
         await this.stop()
       }
@@ -859,6 +860,9 @@ export class PodRunner extends PodRunnerParams {
       const terminated = mainContainerStatus?.state?.terminated
       const exitReason = terminated?.reason
       const exitCode = terminated?.exitCode
+
+      console.log("Main container status:")
+      console.log(JSON.stringify(mainContainerStatus, null, 4))
 
       const errorDetails = async (): Promise<PodErrorDetails> => ({
         logs: await this.getMainContainerLogs(),
