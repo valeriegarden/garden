@@ -27,7 +27,7 @@ import { ProjectConfig } from "../../../../src/config/project"
 import { join } from "path"
 import { remove, readFile, pathExists } from "fs-extra"
 import { dedent } from "../../../../src/util/string"
-import { LogEntry } from "../../../../src/logger/log-entry"
+import { LogEntry, LogEntryNew } from "../../../../src/logger/log-entry"
 import { defaultWorkflowResources, WorkflowStepSpec } from "../../../../src/config/workflow"
 
 describe("RunWorkflowCommand", () => {
@@ -107,17 +107,17 @@ describe("RunWorkflowCommand", () => {
     const stepFooterEntries = filterLogEntries(entries, /Step.*completed/)
     const workflowCompletedEntry = filterLogEntries(entries, /Workflow.*completed/)[0]
 
-    expect(stepHeaderEntries.map((e) => e.getMetadata())).to.eql([undefined, undefined], "stepHeaderEntries")
+    expect(stepHeaderEntries.map((e) => e.metadata)).to.eql([undefined, undefined], "stepHeaderEntries")
 
-    const stepBodyEntriesMetadata = stepBodyEntries.map((e) => e.getMetadata())
+    const stepBodyEntriesMetadata = stepBodyEntries.map((e) => e.metadata)
     expect(stepBodyEntriesMetadata).to.eql(
       [{ workflowStep: { index: 0 } }, { workflowStep: { index: 1 } }],
       "stepBodyEntries"
     )
 
-    expect(stepFooterEntries.map((e) => e.getMetadata())).to.eql([undefined, undefined], "stepFooterEntries")
+    expect(stepFooterEntries.map((e) => e.metadata)).to.eql([undefined, undefined], "stepFooterEntries")
     expect(workflowCompletedEntry).to.exist
-    expect(workflowCompletedEntry!.getMetadata()).to.eql(undefined, "workflowCompletedEntry")
+    expect(workflowCompletedEntry!.metadata).to.eql(undefined, "workflowCompletedEntry")
   })
 
   it("should emit workflow events", async () => {
@@ -164,8 +164,8 @@ describe("RunWorkflowCommand", () => {
     expect(we[6]).to.eql({ name: "workflowComplete", payload: {} })
   })
 
-  function filterLogEntries(entries: LogEntry[], msgRegex: RegExp): LogEntry[] {
-    return entries.filter((e) => msgRegex.test(e.getLatestMessage().msg || ""))
+  function filterLogEntries(entries: LogEntryNew[], msgRegex: RegExp): LogEntryNew[] {
+    return entries.filter((e) => msgRegex.test(e.msg || ""))
   }
 
   it("should collect log outputs from a command step", async () => {

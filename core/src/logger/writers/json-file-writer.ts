@@ -12,7 +12,7 @@ import { LogLevel } from "../logger"
 import { formatForJson } from "../renderers"
 import { FileWriter, levelToStr } from "./file-writer"
 
-export function renderAsJson(level: LogLevel, entry: LogEntry): string | null {
+export function renderAsJson(level: LogLevel, entry: LogEntryNew): string | null {
   if (level >= entry.level) {
     const jsonEntry = formatForJson(entry)
     const empty = !(jsonEntry.msg || jsonEntry.data)

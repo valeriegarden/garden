@@ -12,7 +12,7 @@ import { ensureDir, truncate } from "fs-extra"
 import stripAnsi from "strip-ansi"
 
 import { LogLevel } from "../logger"
-import { LogEntry, LogEntryNew } from "../log-entry"
+import { LogEntryNew } from "../log-entry"
 import { BaseWriterParams, Writer } from "./base"
 import { renderError, renderMsg } from "../renderers"
 import { InternalError } from "../../exceptions"
@@ -95,7 +95,7 @@ export class FileWriter extends Writer {
     return render(this.level, entry)
   }
 
-  onGraphChange(entry: LogEntry) {
+  onGraphChange(entry: LogEntryNew) {
     const out = this.render(entry)
     if (out) {
       if (!this.fileLogger) {

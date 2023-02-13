@@ -282,7 +282,7 @@ ${renderCommands(commands)}
 
     const globalConfigStore = new GlobalConfigStore()
 
-    await validateRuntimeRequirementsCached(logger, globalConfigStore, checkRequirements)
+    await validateRuntimeRequirementsCached(log, globalConfigStore, checkRequirements)
 
     command.printHeader({ headerLog, args: parsedArgs, opts: parsedOpts })
     const sessionId = uuidv4()
@@ -734,7 +734,7 @@ ${renderCommands(commands)}
 }
 
 export async function validateRuntimeRequirementsCached(
-  log: Logger,
+  log: LogEntry,
   globalConfig: GlobalConfigStore,
   requirementCheckFunction: () => Promise<void>
 ) {

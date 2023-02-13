@@ -12,7 +12,7 @@ import { Garden, GardenOpts, GardenParams, resolveGardenParams } from "../garden
 import { DeepPrimitiveMap, StringMap } from "../config/common"
 import { ModuleConfig } from "../config/module"
 import { WorkflowConfig } from "../config/workflow"
-import { LogEntry } from "../logger/log-entry"
+import { LogEntry, LogEntryNew } from "../logger/log-entry"
 import { GardenModule } from "../types/module"
 import { findByName, getNames, isPromise, uuidv4, ValueOf } from "./util"
 import { GardenBaseError, GardenError, InternalError } from "../exceptions"
@@ -48,11 +48,11 @@ export interface EventLogEntry {
  * Retrieves all the child log entries from the given LogEntry and returns a list of all the messages,
  * stripped of ANSI characters. Useful to check if a particular message was logged.
  */
-export function getLogMessages(log: LogEntry, filter?: (log: LogEntry) => boolean) {
+export function getLogMessages(log: LogEntry, filter?: (log: LogEntryNew) => boolean) {
   return log
     .getChildEntries()
     .filter((entry) => (filter ? filter(entry) : true))
-    .flatMap((entry) => entry.getMessages()?.map((state) => stripAnsi(state.msg || "")) || [])
+    .map((entry) => stripAnsi(entry.msg || ""))
 }
 
 type PartialModuleConfig = Partial<ModuleConfig> & { name: string; path: string }

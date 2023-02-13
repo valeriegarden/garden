@@ -25,7 +25,7 @@ describe("artifacts", () => {
   describe("getArtifactFileList", () => {
     let tmpDir: tmp.DirectoryResult
     let artifactsPath: string
-    const log = getLogger().info("")
+    const log = getLogger().placeholder()
 
     beforeEach(async () => {
       tmpDir = await tmp.dir({ unsafeCleanup: true })

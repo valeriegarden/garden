@@ -7,11 +7,9 @@
  */
 
 import { LogEntry, LogEntryMetadata, LogEntryNew, LogEntryParams } from "./log-entry"
-import { getChildEntries, findLogEntry } from "./util"
 import { Writer } from "./writers/base"
 import { CommandError, GardenError, InternalError, ParameterError } from "../exceptions"
 import { BasicTerminalWriter } from "./writers/basic-terminal-writer"
-import { FancyTerminalWriter } from "./writers/fancy-terminal-writer"
 import { JsonTerminalWriter } from "./writers/json-terminal-writer"
 import { EventBus } from "../events"
 import { formatLogEntryForEventStream } from "../cloud/buffered-event-stream"
@@ -160,7 +158,8 @@ export function getWriterInstance(loggerType: LoggerType, level: LogLevel) {
     case "basic":
       return new BasicTerminalWriter({ level })
     case "fancy":
-      return new FancyTerminalWriter({ level })
+      return new BasicTerminalWriter({ level })
+    //   return new FancyTerminalWriter({ level })
     case "json":
       return new JsonTerminalWriter({ level })
     case "ink":
@@ -220,7 +219,7 @@ export class Logger {
   public useEmoji: boolean
   public showTimestamps: boolean
   public level: LogLevel
-  public children: LogEntry[]
+  public children: LogEntryNew[]
   /**
    * Whether or not the log entries are stored in-memory on the logger instance.
    * Defaults to false except when the FancyWriter is used, in which case storing the entries
@@ -282,11 +281,14 @@ export class Logger {
 
     instance = new Logger({ ...config, storeEntries: config.storeEntries, writers: writer ? [writer] : [] })
 
+    // TODO: @eysi
+    const log = instance.placeholder()
+
     if (gardenEnv.GARDEN_LOG_LEVEL) {
-      instance.debug(`Setting log level to ${gardenEnv.GARDEN_LOG_LEVEL} (from GARDEN_LOG_LEVEL)`)
+      log.debug(`Setting log level to ${gardenEnv.GARDEN_LOG_LEVEL} (from GARDEN_LOG_LEVEL)`)
     }
     if (gardenEnv.GARDEN_LOGGER_TYPE) {
-      instance.debug(`Setting logger type to ${gardenEnv.GARDEN_LOGGER_TYPE} (from GARDEN_LOGGER_TYPE)`)
+      log.debug(`Setting logger type to ${gardenEnv.GARDEN_LOGGER_TYPE} (from GARDEN_LOGGER_TYPE)`)
     }
 
     Logger.instance = instance
@@ -319,6 +321,9 @@ export class Logger {
   }
 
   onGraphChange(entry: LogEntryNew) {
+    if (this.storeEntries) {
+      this.children.push(entry)
+    }
     if (entry.level <= eventLogLevel) {
       this.events.emit("logEntry", formatLogEntryForEventStream(entry))
     }
@@ -335,10 +340,10 @@ export class Logger {
     indent,
     metadata,
   }: {
-    level: LogLevel
-    indent: number
-    metadata: LogEntryMetadata
-  }) {
+    level?: LogLevel
+    indent?: number
+    metadata?: LogEntryMetadata
+  } = {}) {
     return new LogEntry({
       level,
       indent,
@@ -347,31 +352,28 @@ export class Logger {
     })
   }
 
-  getLogEntries(): LogEntry[] {
+  getLogEntries(): LogEntryNew[] {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot get entries when storeEntries=false`, {})
     }
-    return getChildEntries(this).filter((entry) => !entry.fromStdStream)
+    return this.children.filter((entry) => !entry.fromStdStream)
   }
 
-  filterBySection(section: string): LogEntry[] {
+  filterBySection(section: string): LogEntryNew[] {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot filter entries when storeEntries=false`, {})
     }
-    return getChildEntries(this).filter((entry) => entry.getLatestMessage().section === section)
+    return this.children.filter((entry) => entry.section === section)
   }
 
-  findById(id: string): LogEntry | void {
+  findById(id: string): LogEntryNew | void {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot find entry when storeEntries=false`, {})
     }
-    return findLogEntry(this, (node) => node.id === id)
+    return this.children.find((entry) => entry.id === id)
   }
 
   stop(): void {
-    if (this.storeEntries) {
-      this.getLogEntries().forEach((e) => e.stop())
-    }
     this.writers.forEach((writer) => writer.stop())
   }
 

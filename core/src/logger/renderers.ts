@@ -78,13 +78,13 @@ export function renderEmoji(entry: LogEntryNew): string {
   return ""
 }
 
-export function renderError(entry: LogEntryNew) {
+export function renderError(entry: LogEntryNew): string {
   const { errorData: error } = entry
   if (error) {
     return formatGardenErrorWithDetail(error)
   }
 
-  return entry.msg
+  return entry.msg || ""
 }
 
 export function renderSymbolBasic(entry: LogEntryNew): string {
@@ -124,7 +124,6 @@ export function getTimestamp(entry: LogEntryNew): string {
 
 export function renderMsg(entry: LogEntryNew): string {
   const { fromStdStream, status, msg } = entry
-  const msg = chainMessages(entry.getMessages() || [])
 
   if (!msg) {
     return ""

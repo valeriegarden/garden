@@ -152,8 +152,8 @@ describe("AnalyticsHandler", () => {
     it("should print an info message if first Garden run", async () => {
       await garden.globalConfigStore.set("analytics", {})
       analytics = await AnalyticsHandler.factory({ garden, log: garden.log, ciInfo })
-      const msgs = garden.log.root.getLogEntries().map((l) => l.getMessages())
-      const infoMsg = msgs.find((messageArr) => messageArr[0].msg?.includes("Thanks for installing Garden!"))
+      const msgs = garden.log.root.getLogEntries().map((l) => l.msg)
+      const infoMsg = msgs.find((msg) => msg?.includes("Thanks for installing Garden!"))
 
       expect(infoMsg).to.exist
     })
@@ -161,8 +161,8 @@ describe("AnalyticsHandler", () => {
       // The existens of base config suggests it's not the first run
       await garden.globalConfigStore.set("analytics", basicConfig)
       analytics = await AnalyticsHandler.factory({ garden, log: garden.log, ciInfo })
-      const msgs = garden.log.root.getLogEntries().map((l) => l.getMessages())
-      const infoMsg = msgs.find((messageArr) => messageArr[0].msg?.includes("Thanks for installing Garden!"))
+      const msgs = garden.log.root.getLogEntries().map((l) => l.msg)
+      const infoMsg = msgs.find((msg) => msg?.includes("Thanks for installing Garden!"))
 
       expect(infoMsg).not.to.exist
     })

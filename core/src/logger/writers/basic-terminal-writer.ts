@@ -7,18 +7,18 @@
  */
 
 import { basicRender } from "../renderers"
-import { LogEntry } from "../log-entry"
+import { LogEntryNew } from "../log-entry"
 import { Logger } from "../logger"
 import { Writer } from "./base"
 
 export class BasicTerminalWriter extends Writer {
   type = "basic"
 
-  render(entry: LogEntry, logger: Logger): string | null {
+  render(entry: LogEntryNew, logger: Logger): string | null {
     return basicRender(entry, logger)
   }
 
-  onGraphChange(entry: LogEntry, logger: Logger) {
+  onGraphChange(entry: LogEntryNew, logger: Logger) {
     const out = this.render(entry, logger)
     if (out) {
       this.output.write(out)

@@ -12,7 +12,7 @@ import { cloneDeep, round } from "lodash"
 
 import { LogLevel, logLevelMap, LogNode } from "./logger"
 import { Omit } from "../util/util"
-import { getChildEntries, findParentEntry, getAllSections } from "./util"
+import { findParentEntry, getAllSections } from "./util"
 import { GardenError } from "../exceptions"
 import { CreateLogEntryParams, Logger, PlaceholderOpts } from "./logger"
 import uniqid from "uniqid"
@@ -135,6 +135,7 @@ interface LogEntryBase {
   // TODO @eysi: Skip?
   fromStdStream?: boolean
   errorData?: GardenError
+  id?: string
   root: Logger
 }
 
@@ -377,7 +378,7 @@ export class LogEntry implements LogNode {
   stop() {}
 
   getChildEntries() {
-    return getChildEntries(this)
+    return this.root.getLogEntries()
   }
 
   /**
@@ -400,11 +401,14 @@ export class LogEntry implements LogNode {
    * For example, to dump all the logs of level info or higher:
    *
    *   log.toString((entry) => entry.level <= LogLevel.info)
+   *
+   * TODO @eysi: Fix, this currently dumps all entries.
    */
-  toString(filter?: (log: LogEntry) => boolean) {
+  toString(filter?: (log: LogEntryNew) => boolean) {
     return this.getChildEntries()
       .filter((entry) => (filter ? filter(entry) : true))
-      .flatMap((entry) => entry.getMessages()?.map((message) => message.msg))
+      // .flatMap((entry) => entry.getMessages()?.map((message) => message.msg))
+      .map((entry) => entry.msg)
       .join("\n")
   }
 

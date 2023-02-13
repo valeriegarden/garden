@@ -8,8 +8,7 @@
 
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
-import { formatGardenErrorWithDetail, getLogger, LogLevel } from "./logger"
-import { Logger } from "./logger"
+import { formatGardenErrorWithDetail, getLogger } from "./logger"
 import { LogEntry, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
 import dedent from "dedent"
@@ -31,32 +30,6 @@ export type LogOptsResolvers = { [K in keyof LogEntryParams]?: Function }
 
 export type ProcessNode<T extends Node = Node> = (node: T) => boolean
 
-function traverseChildren<T extends Node>(node: Node, cb: ProcessNode<T>, reverse = false) {
-  const children = node.children
-  for (let i = 0; i < children.length; i++) {
-    const index = reverse ? children.length - 1 - i : i
-    const proceed = cb(children[index])
-    if (!proceed) {
-      return
-    }
-    traverseChildren(children[index], cb)
-  }
-}
-
-// Parent (T|U) can have different type then child (U)
-export function getChildNodes<T extends Node, U extends Node>(node: T): U[] {
-  let childNodes: U[] = []
-  traverseChildren<U>(node, (child) => {
-    childNodes.push(child)
-    return true
-  })
-  return childNodes
-}
-
-export function getChildEntries(node: Logger | LogEntry): LogEntry[] {
-  return getChildNodes(node)
-}
-
 export function findParentEntry(entry: LogEntry, predicate: ProcessNode<LogEntry>): LogEntry | null {
   return predicate(entry) ? entry : entry.parent ? findParentEntry(entry.parent, predicate) : null
 }
@@ -76,47 +49,6 @@ export function getAllSections(entry: LogEntry, msg: LogEntryMessage) {
   return sections
 }
 
-export function findLogEntry(node: Logger | LogEntry, predicate: ProcessNode<LogEntry>): LogEntry | void {
-  let found: LogEntry | undefined
-  traverseChildren<LogEntry>(node, (entry) => {
-    if (predicate(entry)) {
-      found = entry
-      return false
-    }
-    return true
-  })
-  return found
-}
-
-/**
- * Given a LogNode, get a list of LogEntries that represent the last `lines` number of log lines nested under the node.
- * Note that the returned number of lines may be slightly higher, so you should slice after rendering them (which
- * you anyway need to do if you're wrapping the lines to a certain width).
- *
- * @param node   the log node whose child entries we want to tail
- * @param level  maximum log level to include
- * @param lines  how many lines to aim for
- */
-export function tailChildEntries(node: Logger | LogEntry, level: LogLevel, lines: number): LogEntry[] {
-  let output: LogEntry[] = []
-  let outputLines = 0
-
-  traverseChildren<LogEntry>(node, (entry) => {
-    if (entry.level <= level) {
-      output.push(entry)
-      const msg = entry.getLatestMessage().msg || ""
-      outputLines += msg.length > 0 ? msg.split("\n").length : 0
-
-      if (outputLines >= lines) {
-        return false
-      }
-    }
-    return true
-  })
-
-  return output
-}
-
 /**
  * Returns the entry's section or first parent section it finds.
  */
@@ -130,35 +62,6 @@ export function findSection(entry: LogEntry): string | null {
   }
 
   return null
-}
-
-/**
- * Get the log entry preceding the given `entry` in its tree, given the minimum log `level`.
- */
-export function getPrecedingEntry(entry: LogEntry) {
-  if (!entry.parent) {
-    // This is the first entry in its tree
-    return
-  }
-
-  const siblings = entry.parent.children
-  const index = siblings.findIndex((e) => e.key === entry.key)
-
-  if (index === 0) {
-    // The nearest entry is the parent
-    return entry.parent
-  } else {
-    // The nearest entry is the last entry nested under the next sibling above,
-    // or the sibling itself if it has no child nodes
-    const sibling = siblings[index - 1]
-    const siblingChildren = getChildEntries(sibling)
-
-    if (siblingChildren.length > 0) {
-      return siblingChildren[siblingChildren.length - 1]
-    } else {
-      return sibling
-    }
-  }
 }
 
 interface StreamWriteExtraParam {

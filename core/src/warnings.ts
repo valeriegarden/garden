@@ -27,7 +27,9 @@ export function emitNonRepeatableWarning(message: string) {
   if (!loggerContext.logger) {
     loggerContext.logger = getLogger()
   }
-  loggerContext.logger.warn({
+  // TODO @eysi: Investigate impact.
+  const log = loggerContext.logger.placeholder()
+  log.warn({
     symbol: "warning",
     msg: chalk.yellow(message),
   })

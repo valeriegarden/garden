@@ -466,10 +466,11 @@ function renderParameters(params: Parameters, formatName: (name: string, param: 
   })
 }
 
+// TODO @eysi: We shouldn't pass the logger and logEntry here
 export function renderCommandErrors(logger: Logger, errors: Error[], logEntry?: LogEntry) {
   const gardenErrors: GardenBaseError[] = errors.map(toGardenError)
 
-  const log = logEntry || logger
+  const log = logEntry || logger.placeholder()
 
   for (const error of gardenErrors) {
     log.error({
