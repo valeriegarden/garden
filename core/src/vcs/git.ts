@@ -570,7 +570,7 @@ export class GitHandler extends VcsHandler {
     const isCloned = await pathExists(absPath)
 
     if (!isCloned) {
-      const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: `Fetching from ${url}`, status: "active" })
+      const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: `Fetching from ${url}` })
       const { repositoryUrl, hash } = parseGitUrl(url)
 
       try {

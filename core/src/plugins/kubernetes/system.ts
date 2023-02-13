@@ -79,7 +79,6 @@ export async function getSystemGarden(
       section: "garden system",
       level: LogLevel.debug,
       msg: "Initializing...",
-      status: "active",
       indent: 1,
       childEntriesInheritLevel: true,
     }),

@@ -180,7 +180,7 @@ export async function generateBasicDebugInfoReport(
   })
 
   const tempPath = join(gardenDirPath, TEMP_DEBUG_ROOT)
-  log.info({ msg: "Collecting basic debug info", status: "active" })
+  log.info({ msg: "Collecting basic debug info" })
   // Collect project info
   const projectLog = log.makeNewLogContext({ section: "Project configuration" })
   projectLog.info("collecting info")
@@ -271,8 +271,7 @@ export class GetDebugInfoCommand extends Command<Args, Opts> {
   async action({ garden, log, opts }: CommandParams<Args, Opts>) {
     const tempPath = join(garden.gardenDirPath, TEMP_DEBUG_ROOT)
 
-    // const entry = log.info({ msg: "Collecting debug info", status: "active" })
-    log.info({ msg: "Collecting debug info", status: "active" })
+    log.info({ msg: "Collecting debug info" })
 
     // Collect project info
     const projectLog = log.makeNewLogContext({ section: "Project configuration" })

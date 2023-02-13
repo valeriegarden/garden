@@ -469,7 +469,6 @@ export class GraphSolver extends TypedEventEmitter<SolverEvents> {
     node.task.log.silly({
       section: "graph-solver",
       msg: `Processing node ${taskStyle(node.getKey())}`,
-      status: "active",
       metadata: metadataForLog(node.task, "active"),
     })
   }

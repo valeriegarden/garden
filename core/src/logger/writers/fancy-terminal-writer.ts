@@ -231,13 +231,14 @@ export class FancyTerminalWriter extends Writer {
         let spinnerX: number
         let spinnerCoords: Coords | undefined
 
-        if (entry.getLatestMessage().status === "active") {
-          spinnerX = getLeftOffset(entry)
-          spinnerFrame = this.tickSpinner(entry.key)
-          spinnerCoords = [spinnerX, currentLineNumber]
-        } else {
-          delete this.spinners[entry.key]
-        }
+        // TODO @eysi: Remove
+        // if (entry.getLatestMessage().status === "active") {
+        //   spinnerX = getLeftOffset(entry)
+        //   spinnerFrame = this.tickSpinner(entry.key)
+        //   spinnerCoords = [spinnerX, currentLineNumber]
+        // } else {
+        //   delete this.spinners[entry.key]
+        // }
 
         const text = [entry]
           .map((e) => (e.fromStdStream ? renderMsg(e) : formatForTerminal(e, "fancy")))

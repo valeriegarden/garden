@@ -297,7 +297,6 @@ export class PluginTool extends CliWrapper {
       const targetAbsPath = join(tmpPath, ...this.targetSubpath.split(posix.sep))
 
       const logEntry = log.makeNewLogContextWithMessage({
-        status: "active",
         msg: `Fetching ${this.name}...`,
       })
       const debug = logEntry.makeNewLogContextWithMessage({
@@ -338,9 +337,9 @@ export class PluginTool extends CliWrapper {
       protocol === "file:"
         ? createReadStream(parsed.path!)
         : got.stream({
-          method: "GET",
-          url: this.buildSpec.url,
-        })
+            method: "GET",
+            url: this.buildSpec.url,
+          })
 
     // compute the sha256 checksum
     const hash = createHash("sha256")

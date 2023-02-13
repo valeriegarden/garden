@@ -79,7 +79,6 @@ export class TestTask extends ExecuteActionTask<TestAction, GetTestResult> {
     const taskLog = this.log.makeNewLogContextWithMessage({
       section: action.key(),
       msg: `Running...`,
-      status: "active",
     })
 
     const router = await this.garden.getActionRouter()

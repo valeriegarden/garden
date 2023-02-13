@@ -60,7 +60,6 @@ export class PublishTask extends BaseActionTask<BuildAction, PublishActionResult
       this.log.info({
         section: this.action.key(),
         msg: "Publishing disabled (allowPublish=false set on build)",
-        status: "active",
       })
       return { state: <ActionState>"ready", detail: { published: false }, outputs: {} }
     }

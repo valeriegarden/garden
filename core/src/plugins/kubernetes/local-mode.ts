@@ -835,7 +835,6 @@ export async function startServiceInLocalMode(configParams: StartLocalModeParams
   const section = action.key()
 
   log.info({
-    status: "active",
     section,
     msg: chalk.gray("Starting in local mode..."),
   })
@@ -861,7 +860,6 @@ export async function startServiceInLocalMode(configParams: StartLocalModeParams
   const localApp = getLocalAppProcess(configParams)
   if (!!localApp) {
     log.info({
-      status: "active",
       section,
       msg: chalk.white("Starting local app, this can take a while"),
     })
@@ -889,13 +887,11 @@ export async function startServiceInLocalMode(configParams: StartLocalModeParams
 
   const compositeSshTunnel = composeSshTunnelProcessTree(kubectlPortForward, reversePortForwards, log)
   log.info({
-    status: "active",
     section,
     msg: chalk.white("Starting local mode ssh tunnels, some failures and retries are possible"),
   })
   const sshTunnelCmdRenderer = (command: OsCommand) => `${command.command} ${command.args?.join(" ")}`
   log.verbose({
-    status: "active",
     section,
     msg: chalk.gray(
       `Starting the process tree for the local mode ssh tunnels:\n` +

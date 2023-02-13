@@ -26,8 +26,8 @@ describe("FancyTerminalWriter", () => {
       logger.info("2 lines\n") // 1
       logger.info("1 line") // 3
       logger.info("3 lines\n\n") // 4
-      const spinner = logger.info({ msg: "spinner", status: "active" }) // 7
-      spinner.info({ msg: "nested spinner", status: "active" }) // 8
+      const spinner = logger.info({ msg: "spinner" }) // 7
+      spinner.info({ msg: "nested spinner" }) // 8
       const terminalEntries = writer.toTerminalEntries(logger)
       const lineNumbers = terminalEntries.map((e) => e.lineNumber)
       const spinners = terminalEntries.filter((e) => !!e.spinnerCoords).map((e) => e.spinnerCoords)

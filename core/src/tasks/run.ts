@@ -33,7 +33,6 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
     const taskLog = this.log.makeNewLogContextWithMessage({
       section: this.action.name,
       msg: "Checking result...",
-      status: "active",
     })
     const router = await this.garden.getActionRouter()
     const action = this.getResolvedAction(this.action, dependencyResults)
@@ -65,7 +64,6 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
     const taskLog = this.log.makeNewLogContextWithMessage({
       section: action.key(),
       msg: "Running...",
-      status: "active",
     })
 
     const actions = await this.garden.getActionRouter()

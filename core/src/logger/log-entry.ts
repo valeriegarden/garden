@@ -20,7 +20,8 @@ import { ActionKind } from "../plugin/action-types"
 
 export type EmojiName = keyof typeof nodeEmoji.emoji
 export type LogSymbol = keyof typeof logSymbols | "empty"
-export type EntryStatus = "active" | "done" | "error" | "success" | "warn"
+// TODO: Do we keep this?
+export type EntryStatus = "done" | "error" | "success" | "warn"
 export type TaskLogStatus = "active" | "success" | "error"
 
 export interface LogEntryMetadata {
