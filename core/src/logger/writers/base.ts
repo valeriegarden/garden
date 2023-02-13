@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LogEntry } from "../log-entry"
+import { LogEntryNew } from "../log-entry"
 import { Logger } from "../logger"
 import { LogLevel } from "../logger"
 
@@ -25,7 +25,7 @@ export abstract class Writer {
     this.output = output
   }
 
-  abstract onGraphChange(entry: LogEntry, logger: Logger): void
+  abstract onGraphChange(entry: LogEntryNew, logger: Logger): void
   abstract stop(): void
   cleanup(): void {}
 }

@@ -12,7 +12,7 @@ import { ensureDir, truncate } from "fs-extra"
 import stripAnsi from "strip-ansi"
 
 import { LogLevel } from "../logger"
-import { LogEntry } from "../log-entry"
+import { LogEntry, LogEntryNew } from "../log-entry"
 import { BaseWriterParams, Writer } from "./base"
 import { renderError, renderMsg } from "../renderers"
 import { InternalError } from "../../exceptions"
@@ -40,7 +40,7 @@ const DEFAULT_FILE_TRANSPORT_OPTIONS: FileTransportOptions = {
 
 export const levelToStr = (lvl: LogLevel): string => LogLevel[lvl]
 
-export function render(level: LogLevel, entry: LogEntry): string | null {
+export function render(level: LogLevel, entry: LogEntryNew): string | null {
   if (level >= entry.level) {
     const renderFn = entry.level === LogLevel.error ? renderError : renderMsg
     return stripAnsi(renderFn(entry))
@@ -91,7 +91,7 @@ export class FileWriter extends Writer {
     })
   }
 
-  render(entry: LogEntry): string | null {
+  render(entry: LogEntryNew): string | null {
     return render(this.level, entry)
   }
 

@@ -85,7 +85,6 @@ export interface LogEntryConstructor extends LogEntryParams {
   level: LogLevel
   root: Logger
   parent?: LogEntry
-  isPlaceholder?: boolean
 }
 
 export interface ActionLogEntryConstructor extends LogEntryConstructor {
@@ -113,6 +112,49 @@ function resolveUpdateParams(params?: string | UpdateLogEntryParams): UpdateLogE
   }
 }
 
+interface LogEntryBase {
+  type: "logEntry" | "actionLogEntry" | "pluginLogEntry"
+  // TODO @eysi: Rename to text?
+  msg?: string
+  // TODO @eysi: Skip?
+  emoji?: EmojiName
+  status?: EntryStatus
+  // TODO @eysi: Skip and only allow section on Log?
+  section?: string
+  symbol?: LogSymbol
+  // TODO @eysi: Skip?
+  append?: boolean
+  data?: any
+  dataFormat?: "json" | "yaml"
+  timestamp: string
+  metadata?: LogEntryMetadata
+  key: string
+  level: LogLevel
+  // TODO @eysi: Skip?
+  indent?: number
+  // TODO @eysi: Skip?
+  fromStdStream?: boolean
+  errorData?: GardenError
+  root: Logger
+}
+
+// TODO @eysi: Rename to LogEntry
+export interface LogEntryNew extends LogEntryBase {
+  type: "logEntry"
+}
+
+interface ActionLogEntry extends LogEntryBase {
+  type: "actionLogEntry"
+  actionMetadata: ActionMetadata
+}
+
+interface PluginLogEntry extends LogEntryBase {
+  type: "pluginLogEntry"
+  actionMetadata: ActionMetadata
+  pluginMetadata: PluginMetadata
+}
+
+// TODO @eysi: Rename to Log
 export class LogEntry implements LogNode {
   private messages: LogEntryMessage[]
   private metadata?: LogEntryMetadata
@@ -121,14 +163,14 @@ export class LogEntry implements LogNode {
   public readonly key: string
   public readonly level: LogLevel
   public readonly root: Logger
+  public readonly section?: string
   public readonly fromStdStream?: boolean
   public readonly indent?: number
   public readonly errorData?: GardenError
   public readonly childEntriesInheritLevel?: boolean
   public readonly id?: string
   public type: "logEntry"
-  public children: LogEntry[]
-  public isPlaceholder: boolean
+  public children: LogEntryNew[]
   public revision: number
 
   constructor(params: LogEntryConstructor) {
@@ -145,88 +187,11 @@ export class LogEntry implements LogNode {
     this.childEntriesInheritLevel = params.childEntriesInheritLevel
     this.metadata = params.metadata
     this.id = params.id
-    this.isPlaceholder = params.isPlaceholder || false
     this.revision = -1
+    this.section = params.section
 
-    // TODO
-    // if (!params.isPlaceholder) {
-    //   this.update({
-    //     msg: params.msg,
-    //     emoji: params.emoji,
-    //     section: params.section,
-    //     symbol: params.symbol,
-    //     status: params.level === LogLevel.error ? "error" : params.status,
-    //     data: params.data,
-    //     dataFormat: params.dataFormat,
-    //     append: params.append,
-    //   })
-    // } else {
-    //   this.messages = [{ timestamp: new Date() }]
-    // }
     this.messages = [{ timestamp: new Date() }]
   }
-
-  /**
-   * Updates the log entry with a few invariants:
-   * 1. msg, emoji, section, status, and symbol can only be replaced with a value of same type, not removed
-   * 2. append is always set explicitly (the next message does not inherit the previous value)
-   * 3. next metadata is merged with the previous metadata
-   */
-  // private update(updateParams: UpdateLogEntryParams): void {
-  //   this.revision = this.revision + 1
-  //   const latestMessage = this.getLatestMessage()
-
-  //   // Explicitly set all the fields so the shape stays consistent
-  //   const nextMessage: LogEntryMessage = {
-  //     // Ensure empty string gets set
-  //     msg: typeof updateParams.msg === "string" ? updateParams.msg : latestMessage.msg,
-  //     emoji: updateParams.emoji || latestMessage.emoji,
-  //     section: updateParams.section || latestMessage.section,
-  //     status: updateParams.status || latestMessage.status,
-  //     symbol: updateParams.symbol || latestMessage.symbol,
-  //     data: updateParams.data || latestMessage.data,
-  //     dataFormat: updateParams.dataFormat || latestMessage.dataFormat,
-  //     // Next message does not inherit the append field
-  //     append: updateParams.append,
-  //     timestamp: new Date(),
-  //   }
-
-  //   // Hack to preserve section alignment if spinner disappears
-  //   const hadSpinner = latestMessage.status === "active"
-  //   const hasSymbolOrSpinner = nextMessage.symbol || nextMessage.status === "active"
-  //   if (nextMessage.section && hadSpinner && !hasSymbolOrSpinner) {
-  //     nextMessage.symbol = "empty"
-  //   }
-
-  //   if (this.isPlaceholder) {
-  //     // If it's a placeholder, this will be the first message...
-  //     this.messages = [nextMessage]
-  //     this.isPlaceholder = false
-  //   } else {
-  //     // ...otherwise we push it
-  //     this.messages = [...(this.messages || []), nextMessage]
-  //   }
-
-  //   if (updateParams.metadata) {
-  //     this.metadata = { ...(this.metadata || {}), ...updateParams.metadata }
-  //   }
-  // }
-
-  // Update node and child nodes
-  // private deepUpdate(updateParams: UpdateLogEntryParams): void {
-  //   const wasActive = this.getLatestMessage().status === "active"
-
-  //   this.update(updateParams)
-
-  //   // Stop active child nodes if no longer active
-  //   if (wasActive && updateParams.status !== "active") {
-  //     getChildEntries(this).forEach((entry) => {
-  //       if (entry.getLatestMessage().status === "active") {
-  //         entry.update({ status: "done" })
-  //       }
-  //     })
-  //   }
-  // }
 
   private createLogEntry(params: CreateLogEntryParams) {
     const indent = params.indent !== undefined ? params.indent : (this.indent || 0) + 1
@@ -241,14 +206,29 @@ export class LogEntry implements LogNode {
       metadata = { ...cloneDeep(this.metadata || {}), ...(params.metadata || {}) }
     }
 
-    return new LogEntry({
+    const logEntry: LogEntryNew = {
+      type: "logEntry",
+      section: this.section,
       ...params,
-      indent,
       level,
+      timestamp: new Date().toISOString(),
+      indent,
       metadata,
+      // TODO @eysi: Do we need this?
+      key: uniqid(),
+      // TODO @eysi: Use root config as opposed to referencing a class instance?
       root: this.root,
-      parent: this,
-    })
+    }
+
+    return logEntry
+    // return new LogEntry({
+    //   ...params,
+    //   indent,
+    //   level,
+    //   metadata,
+    //   root: this.root,
+    //   parent: this,
+    // })
   }
 
   private log(params: CreateLogEntryParams): void {
@@ -360,13 +340,6 @@ export class LogEntry implements LogNode {
       root: this.root,
       parent: this,
     })
-    // return this.log({
-    //   level,
-    //   indent: indentForNode,
-    //   childEntriesInheritLevel,
-    //   isPlaceholder: true,
-    //   metadata,
-    // })
   }
 
   // TODO: Keeping this for now, will update in a follow up PR

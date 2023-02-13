@@ -7,7 +7,7 @@
  */
 
 import winston from "winston"
-import { LogEntry } from "../log-entry"
+import { LogEntry, LogEntryNew } from "../log-entry"
 import { LogLevel } from "../logger"
 import { formatForJson } from "../renderers"
 import { FileWriter, levelToStr } from "./file-writer"
@@ -39,11 +39,11 @@ export class JsonFileWriter extends FileWriter {
     })
   }
 
-  render(entry: LogEntry): string | null {
+  render(entry: LogEntryNew): string | null {
     return renderAsJson(this.level, entry)
   }
 
-  onGraphChange(entry: LogEntry): void {
+  onGraphChange(entry: LogEntryNew): void {
     const out = this.render(entry)
     if (out) {
       if (!this.fileLogger) {

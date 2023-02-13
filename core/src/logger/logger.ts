@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LogEntry, LogEntryMetadata, LogEntryParams } from "./log-entry"
+import { LogEntry, LogEntryMetadata, LogEntryNew, LogEntryParams } from "./log-entry"
 import { getChildEntries, findLogEntry } from "./util"
 import { Writer } from "./writers/base"
 import { CommandError, GardenError, InternalError, ParameterError } from "../exceptions"
@@ -189,7 +189,6 @@ export interface LoggerConstructor extends LoggerConfigBase {
 
 export interface CreateLogEntryParams extends LogEntryParams {
   level: LogLevel
-  isPlaceholder?: boolean
 }
 
 export interface PlaceholderOpts {
@@ -215,7 +214,8 @@ function resolveParams(level: LogLevel, params: string | LogEntryParams): Create
   return { ...params, level }
 }
 
-export class Logger implements LogNode {
+// TODO @eysi: Rename.
+export class Logger {
   public events: EventBus
   public useEmoji: boolean
   public showTimestamps: boolean
@@ -310,15 +310,6 @@ export class Logger implements LogNode {
     this.storeEntries = config.storeEntries
   }
 
-  private addNode(params: CreateLogEntryParams): LogEntry {
-    const entry = new LogEntry({ ...params, root: this })
-    if (this.storeEntries) {
-      this.children.push(entry)
-    }
-    this.onGraphChange(entry)
-    return entry
-  }
-
   addWriter(writer: Writer) {
     this.writers.push(writer)
   }
@@ -327,8 +318,8 @@ export class Logger implements LogNode {
     return this.writers
   }
 
-  onGraphChange(entry: LogEntry) {
-    if (entry.level <= eventLogLevel && !entry.isPlaceholder) {
+  onGraphChange(entry: LogEntryNew) {
+    if (entry.level <= eventLogLevel) {
       this.events.emit("logEntry", formatLogEntryForEventStream(entry))
     }
     for (const writer of this.writers) {
@@ -338,33 +329,22 @@ export class Logger implements LogNode {
     }
   }
 
-  silly(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.silly, params))
-  }
-
-  debug(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.debug, params))
-  }
-
-  verbose(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.verbose, params))
-  }
-
-  info(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.info, params))
-  }
-
-  warn(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.warn, params))
-  }
-
-  error(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveParams(LogLevel.error, params))
-  }
-
-  placeholder({ level = LogLevel.info, indent, metadata }: PlaceholderOpts = {}): LogEntry {
-    // Ensure placeholder child entries align with parent context
-    return this.addNode({ level, indent: indent || -1, isPlaceholder: true, metadata })
+  // TODO @eysi: Rename
+  placeholder({
+    level = LogLevel.info,
+    indent,
+    metadata,
+  }: {
+    level: LogLevel
+    indent: number
+    metadata: LogEntryMetadata
+  }) {
+    return new LogEntry({
+      level,
+      indent,
+      metadata,
+      root: this,
+    })
   }
 
   getLogEntries(): LogEntry[] {

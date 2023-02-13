@@ -8,7 +8,7 @@
 
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
-import { formatGardenErrorWithDetail, LogLevel } from "./logger"
+import { formatGardenErrorWithDetail, getLogger, LogLevel } from "./logger"
 import { Logger } from "./logger"
 import { LogEntry, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
@@ -222,21 +222,22 @@ export function getTerminalWidth(stream: NodeJS.WriteStream = process.stdout) {
 /**
  * Prints emoji if supported and adds padding to the right (otherwise subsequent text flows over the emoji).
  */
-export function printEmoji(emoji: EmojiName, log: LogEntry) {
-  if (log.root.useEmoji && nodeEmoji.hasEmoji(emoji)) {
+export function printEmoji(emoji: EmojiName) {
+  const logger = getLogger()
+  if (logger.useEmoji && nodeEmoji.hasEmoji(emoji)) {
     return `${nodeEmoji.get(emoji)} `
   }
   return ""
 }
 
 export function printHeader(log: LogEntry, command: string, emoji: EmojiName): void {
-  log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji, log))
+  log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji))
   log.info("") // Print new line after header
 }
 
 export function printFooter(log: LogEntry) {
   log.info("") // Print new line before footer
-  return log.info(chalk.bold.magenta("Done!") + " " + printEmoji("heavy_check_mark", log))
+  return log.info(chalk.bold.magenta("Done!") + " " + printEmoji("heavy_check_mark"))
 }
 
 export function printWarningMessage(log: LogEntry, text: string) {

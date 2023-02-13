@@ -7,10 +7,9 @@
  */
 
 import Bluebird from "bluebird"
-import { omit } from "lodash"
 
 import { Events, EventName, EventBus, pipedEventNames } from "../events"
-import { LogEntryMetadata, LogEntry, LogEntryMessage } from "../logger/log-entry"
+import { LogEntryMetadata, LogEntry, LogEntryMessage, LogEntryNew } from "../logger/log-entry"
 import { got } from "../util/http"
 
 import { LogLevel } from "../logger/logger"
@@ -24,29 +23,31 @@ export type StreamEvent = {
 }
 
 // TODO: Remove data, section, timestamp and msg once we've updated GE (it's included in the message)
+// TODO @eysi: BREAKING CHANGE
 export interface LogEntryEventPayload {
   key: string
-  parentKey: string | null
-  revision: number
-  timestamp: Date
+  timestamp: string
   level: LogLevel
   message: Omit<LogEntryMessage, "timestamp">
   metadata?: LogEntryMetadata
 }
 
-export function formatLogEntryForEventStream(entry: LogEntry): LogEntryEventPayload {
-  const message = entry.getLatestMessage()
-  const { key, revision, level } = entry
-  const parentKey = entry.parent ? entry.parent.key : null
-  const metadata = entry.getMetadata()
+// TODO @eysi: Revisit shape.
+export function formatLogEntryForEventStream(entry: LogEntryNew): LogEntryEventPayload {
   return {
-    key,
-    parentKey,
-    revision,
-    metadata,
-    timestamp: message.timestamp,
-    level,
-    message: omit(message, "timestamp"),
+    key: entry.key,
+    metadata: entry.metadata,
+    timestamp: entry.timestamp,
+    level: entry.level,
+    message: {
+      msg: entry.msg, 
+      emoji: entry.emoji,
+      status: entry.status,
+      symbol: entry.symbol,
+      append: entry.append,
+      data: entry.data,
+      dataFormat: entry.dataFormat
+    },
   }
 }
 
