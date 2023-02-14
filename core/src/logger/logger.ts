@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LogEntry, LogEntryMetadata, LogEntryNew, LogEntryParams } from "./log-entry"
+import { Log, LogEntryMetadata, LogEntry, LogEntryParams } from "./log-entry"
 import { Writer } from "./writers/base"
 import { CommandError, GardenError, InternalError, ParameterError } from "../exceptions"
 import { BasicTerminalWriter } from "./writers/basic-terminal-writer"
@@ -107,7 +107,7 @@ export function sanitizeValue(value: any, _parents?: WeakSet<any>): any {
     return "<Buffer>"
   } else if (value instanceof Logger) {
     return "<Logger>"
-  } else if (value instanceof LogEntry) {
+  } else if (value instanceof Log) {
     return "<LogEntry>"
     // This is hacky but fairly reliably identifies a Joi schema object
   } else if (value.$_root) {
@@ -219,7 +219,7 @@ export class Logger {
   public useEmoji: boolean
   public showTimestamps: boolean
   public level: LogLevel
-  public children: LogEntryNew[]
+  public children: LogEntry[]
   /**
    * Whether or not the log entries are stored in-memory on the logger instance.
    * Defaults to false except when the FancyWriter is used, in which case storing the entries
@@ -320,7 +320,7 @@ export class Logger {
     return this.writers
   }
 
-  onGraphChange(entry: LogEntryNew) {
+  onGraphChange(entry: LogEntry) {
     if (this.storeEntries) {
       this.children.push(entry)
     }
@@ -344,7 +344,7 @@ export class Logger {
     indent?: number
     metadata?: LogEntryMetadata
   } = {}) {
-    return new LogEntry({
+    return new Log({
       level,
       indent,
       metadata,
@@ -352,21 +352,21 @@ export class Logger {
     })
   }
 
-  getLogEntries(): LogEntryNew[] {
+  getLogEntries(): LogEntry[] {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot get entries when storeEntries=false`, {})
     }
     return this.children.filter((entry) => !entry.fromStdStream)
   }
 
-  filterBySection(section: string): LogEntryNew[] {
+  filterBySection(section: string): LogEntry[] {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot filter entries when storeEntries=false`, {})
     }
     return this.children.filter((entry) => entry.section === section)
   }
 
-  findById(id: string): LogEntryNew | void {
+  findById(id: string): LogEntry | void {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot find entry when storeEntries=false`, {})
     }

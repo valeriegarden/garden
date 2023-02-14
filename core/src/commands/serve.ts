@@ -16,7 +16,7 @@ import { dedent } from "../util/string"
 import { getLogLevelChoices, LogLevel } from "../logger/logger"
 import { getBuiltinCommands } from "./commands"
 import { getCustomCommands } from "./custom"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { CommandLine } from "../cli/command-line"
 import { Autocompleter, AutocompleteSuggestion } from "../cli/autocomplete"
 import chalk from "chalk"
@@ -117,7 +117,7 @@ export class ServeCommand<
     })
   }
 
-  async reload(log: LogEntry, garden: Garden) {
+  async reload(log: Log, garden: Garden) {
     this.commandLine?.disable("🌸  Loading Garden project...")
 
     try {

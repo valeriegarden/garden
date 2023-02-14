@@ -21,7 +21,7 @@ import { ConfigurationError, RuntimeError } from "../../exceptions"
 import { getResourceContainer, prepareEnvVars } from "./util"
 import { V1Container, V1ContainerPort } from "@kubernetes/client-node"
 import { KubernetesPluginContext, KubernetesTargetResourceSpec, targetResourceSpecSchema } from "./config"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import chalk from "chalk"
 import { rmSync } from "fs"
 import { execSync } from "child_process"
@@ -81,7 +81,7 @@ interface ConfigureLocalModeParams {
   spec: ContainerLocalModeSpec
   targetResource: SyncableResource
   action: ContainerDeployAction | KubernetesDeployAction | HelmDeployAction
-  log: LogEntry
+  log: Log
   containerName?: string
 }
 
@@ -141,7 +141,7 @@ export class ProxySshKeystore {
 
   private static instance?: ProxySshKeystore = undefined
 
-  public static getInstance(log: LogEntry): ProxySshKeystore {
+  public static getInstance(log: Log): ProxySshKeystore {
     if (!ProxySshKeystore.instance) {
       const newInstance = new ProxySshKeystore()
       registerCleanupFunction("shutdown-proxy-ssh-keystore", () => newInstance.shutdown(log))
@@ -150,7 +150,7 @@ export class ProxySshKeystore {
     return ProxySshKeystore.instance
   }
 
-  private static deleteFileFailSafe(filePath: string, log: LogEntry): void {
+  private static deleteFileFailSafe(filePath: string, log: Log): void {
     try {
       rmSync(filePath, { force: true })
     } catch (err) {
@@ -171,7 +171,7 @@ export class ProxySshKeystore {
     return join(gardenDirPath, ProxySshKeystore.PROXY_CONTAINER_SSH_DIR)
   }
 
-  private removePortFromKnownHosts(localPort: number, log: LogEntry): void {
+  private removePortFromKnownHosts(localPort: number, log: Log): void {
     for (const knownHostsFilePath of this.knownHostsFilePaths) {
       const localhostEscaped = localhost.split(".").join("\\.")
       const command = `sed -i -r '/^\\[${localhostEscaped}\\]:${localPort}/d' ${knownHostsFilePath}`
@@ -216,13 +216,13 @@ export class ProxySshKeystore {
     return knownHostsFilePath
   }
 
-  public registerLocalPort(port: number, log: LogEntry): void {
+  public registerLocalPort(port: number, log: Log): void {
     // ensure the temporary known hosts is not "dirty"
     this.removePortFromKnownHosts(port, log)
     this.localSshPorts.add(port)
   }
 
-  public shutdown(log: LogEntry): void {
+  public shutdown(log: Log): void {
     this.serviceKeyPairs.forEach((value) => {
       ProxySshKeystore.deleteFileFailSafe(value.privateKeyPath, log)
       ProxySshKeystore.deleteFileFailSafe(value.publicKeyPath, log)
@@ -804,7 +804,7 @@ async function getReversePortForwardProcesses(
 function composeSshTunnelProcessTree(
   sshTunnel: RecoverableProcess,
   reversePortForwards: RecoverableProcess[],
-  log: LogEntry
+  log: Log
 ): RecoverableProcess {
   const root = sshTunnel
   root.addDescendants(...reversePortForwards)

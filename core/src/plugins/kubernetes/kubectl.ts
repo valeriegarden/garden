@@ -9,7 +9,7 @@
 import _spawn from "cross-spawn"
 import { encodeYamlMulti } from "../../util/util"
 import { ExecParams, PluginTool } from "../../util/ext-tools"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import { KubernetesProvider } from "./config"
 import { KubernetesResource } from "./types"
 import { gardenAnnotationKey } from "../../util/string"
@@ -44,7 +44,7 @@ const versionedPruneKinds = [
 ]
 
 export interface ApplyParams {
-  log: LogEntry
+  log: Log
   ctx: PluginContext
   api: KubeApi
   provider: KubernetesProvider
@@ -140,7 +140,7 @@ export async function deleteResources({
   resources,
   includeUninitialized = false,
 }: {
-  log: LogEntry
+  log: Log
   ctx: PluginContext
   provider: KubernetesProvider
   namespace: string
@@ -168,7 +168,7 @@ export async function deleteObjectsBySelector({
   objectTypes,
   includeUninitialized = false,
 }: {
-  log: LogEntry
+  log: Log
   ctx: PluginContext
   provider: KubernetesProvider
   namespace: string
@@ -184,7 +184,7 @@ export async function deleteObjectsBySelector({
 }
 
 interface KubectlParams extends ExecParams {
-  log: LogEntry
+  log: Log
   namespace?: string
   configPath?: string
   args: string[]
@@ -204,7 +204,7 @@ class Kubectl extends PluginTool {
     super(spec)
   }
 
-  async getPath(log: LogEntry) {
+  async getPath(log: Log) {
     const override = this.provider.config.kubectlPath
 
     if (override) {

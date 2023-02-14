@@ -9,7 +9,7 @@
 import { mapKeys, mapValues, pickBy, uniqBy } from "lodash"
 import type { Garden } from "../garden"
 import type { ConfigGraph } from "../graph/config-graph"
-import type { LogEntry } from "../logger/log-entry"
+import type { Log } from "../logger/log-entry"
 import type { BaseActionTaskParams, BaseTask, ExecuteTask } from "./base"
 import type { Action } from "../actions/types"
 import { isDeployAction } from "../actions/deploy"

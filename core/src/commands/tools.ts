@@ -9,7 +9,7 @@
 import chalk from "chalk"
 import { max, omit, sortBy } from "lodash"
 import { dedent, renderTable, tablePresets } from "../util/string"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { Garden, DummyGarden } from "../garden"
 import { Command, CommandParams } from "./base"
 import { getTerminalWidth } from "../logger/util"
@@ -190,7 +190,7 @@ async function getTools(garden: Garden) {
   )
 }
 
-async function printTools(garden: Garden, log: LogEntry) {
+async function printTools(garden: Garden, log: Log) {
   log.info(dedent`
   ${chalk.white.bold("USAGE")}
 

@@ -18,7 +18,7 @@ import { KubernetesResource, KubernetesServerResource, BaseResource } from "../t
 import { zip, isArray, isPlainObject, pickBy, mapValues, flatten, cloneDeep, omit } from "lodash"
 import { KubernetesProvider, KubernetesPluginContext } from "../config"
 import { isSubset } from "../../../util/is-subset"
-import { LogEntry } from "../../../logger/log-entry"
+import { Log } from "../../../logger/log-entry"
 import {
   V1ReplicationController,
   V1ReplicaSet,
@@ -47,7 +47,7 @@ export interface StatusHandlerParams<T = BaseResource> {
   api: KubeApi
   namespace: string
   resource: KubernetesServerResource<T>
-  log: LogEntry
+  log: Log
   resourceVersion?: number
 }
 
@@ -118,7 +118,7 @@ export async function checkResourceStatuses(
   api: KubeApi,
   namespace: string,
   manifests: KubernetesResource[],
-  log: LogEntry
+  log: Log
 ): Promise<ResourceStatus[]> {
   return Bluebird.map(manifests, async (manifest) => {
     return checkResourceStatus(api, namespace, manifest, log)
@@ -129,7 +129,7 @@ export async function checkResourceStatus(
   api: KubeApi,
   namespace: string,
   manifest: KubernetesResource,
-  log: LogEntry
+  log: Log
 ) {
   const handler = objHandlers[manifest.kind]
 
@@ -168,7 +168,7 @@ interface WaitParams {
   provider: KubernetesProvider
   actionName?: string
   resources: KubernetesResource[]
-  log: LogEntry
+  log: Log
   timeoutSec: number
 }
 
@@ -294,7 +294,7 @@ export async function compareDeployedResources(
   api: KubeApi,
   namespace: string,
   manifests: KubernetesResource[],
-  log: LogEntry
+  log: Log
 ): Promise<ComparisonResult> {
   // Unroll any `List` resource types
   manifests = flatten(manifests.map((r: any) => (r.apiVersion === "v1" && r.kind === "List" ? r.items : [r])))
@@ -472,7 +472,7 @@ export async function getDeployedResource(
   ctx: PluginContext,
   provider: KubernetesProvider,
   resource: KubernetesResource,
-  log: LogEntry
+  log: Log
 ): Promise<KubernetesResource | null> {
   const api = await KubeApi.factory(log, ctx, provider)
   const namespace = resource.metadata?.namespace || (await getAppNamespace(ctx, log, provider))

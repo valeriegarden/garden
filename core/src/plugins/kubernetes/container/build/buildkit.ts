@@ -13,7 +13,7 @@ import { isEmpty } from "lodash"
 import { buildSyncVolumeName, dockerAuthSecretKey } from "../../constants"
 import { KubeApi } from "../../api"
 import { KubernetesDeployment } from "../../types"
-import { LogEntry } from "../../../../logger/log-entry"
+import { Log } from "../../../../logger/log-entry"
 import { waitForResources, compareDeployedResources } from "../../status/status"
 import { KubernetesProvider, KubernetesPluginContext, ClusterBuildkitCacheConfig } from "../../config"
 import { PluginContext } from "../../../../plugin-context"
@@ -180,7 +180,7 @@ export async function ensureBuildkit({
 }: {
   ctx: PluginContext
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   api: KubeApi
   namespace: string
 }) {

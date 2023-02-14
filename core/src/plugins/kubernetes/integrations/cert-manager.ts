@@ -11,7 +11,7 @@ import { KubeApi } from "../api"
 import { getAppNamespace, ensureNamespace } from "../namespace"
 import { sleep } from "../../../util/util"
 import { find } from "lodash"
-import { LogEntry } from "../../../logger/log-entry"
+import { Log } from "../../../logger/log-entry"
 import { KUBECTL_DEFAULT_TIMEOUT, apply, kubectl } from "../kubectl"
 import { PluginContext } from "../../../plugin-context"
 import { join } from "path"
@@ -56,14 +56,14 @@ export async function checkForCertManagerPodsReady({ log, ctx, provider }: Predi
 interface PredicateParams {
   ctx: PluginContext
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   namespace?: string
   resources?: any[]
 }
 interface WaitForResourcesParams {
   ctx: PluginContext
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   resourcesType: string
   resources: any[]
   predicate: (PredicateParams) => Promise<boolean>
@@ -138,13 +138,13 @@ export function isCertificateReady(cert) {
  * they are not present in the cluster.
  *
  * @export
- * @param {LogEntry} log
+ * @param {Log} log
  * @param {KubernetesProvider} provider
  * @param {string} namespace
  * @returns
  */
 export async function getAllCertificates(
-  log: LogEntry,
+  log: Log,
   ctx: PluginContext,
   provider: KubernetesProvider,
   namespace: string
@@ -171,7 +171,7 @@ export async function checkCertManagerStatus({
   log,
   namespace = "cert-manager",
 }: {
-  log: LogEntry
+  log: Log
   ctx: PluginContext
   provider: KubernetesProvider
   namespace?: string
@@ -199,7 +199,7 @@ export async function checkCertManagerStatus({
 export interface SetupCertManagerParams {
   ctx: KubernetesPluginContext
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   status: EnvironmentStatus<PrimitiveMap>
 }
 
@@ -236,7 +236,7 @@ export async function setupCertManager({ ctx, provider, log, status }: SetupCert
       const waitForCertManagerPods: WaitForResourcesParams = {
         ctx,
         provider,
-        log: <LogEntry>certsLog,
+        log: <Log>certsLog,
         resources: [],
         resourcesType: "cert-manager pods",
         predicate: checkForCertManagerPodsReady,

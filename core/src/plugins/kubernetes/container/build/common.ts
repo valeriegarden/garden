@@ -22,7 +22,7 @@ import { PodRunner } from "../../run"
 import { PluginContext } from "../../../../plugin-context"
 import { hashString, sleep } from "../../../../util/util"
 import { InternalError, RuntimeError } from "../../../../exceptions"
-import { LogEntry } from "../../../../logger/log-entry"
+import { Log } from "../../../../logger/log-entry"
 import { prepareDockerAuth } from "../../init"
 import { prepareSecrets } from "../../secrets"
 import chalk from "chalk"
@@ -67,7 +67,7 @@ const deployLock = new AsyncLock()
 
 interface SyncToSharedBuildSyncParams {
   ctx: KubernetesPluginContext
-  log: LogEntry
+  log: Log
   api: KubeApi
   action: ContainerBuildAction
   namespace: string
@@ -172,7 +172,7 @@ export async function skopeoBuildStatus({
   namespace: string
   deploymentName: string
   containerName: string
-  log: LogEntry
+  log: Log
   api: KubeApi
   ctx: PluginContext
   provider: KubernetesProvider
@@ -286,7 +286,7 @@ export async function ensureUtilDeployment({
 }: {
   ctx: PluginContext
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   api: KubeApi
   namespace: string
 }) {
@@ -366,7 +366,7 @@ export async function ensureBuilderSecret({
   namespace,
 }: {
   provider: KubernetesProvider
-  log: LogEntry
+  log: Log
   api: KubeApi
   namespace: string
 }) {

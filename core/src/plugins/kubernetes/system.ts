@@ -11,7 +11,7 @@ import { join } from "path"
 import { STATIC_DIR, DEFAULT_API_VERSION } from "../../constants"
 import { Garden } from "../../garden"
 import { KubernetesPluginContext, KubernetesConfig } from "./config"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import { getSystemNamespace } from "./namespace"
 import { PluginError } from "../../exceptions"
 import { DeepPrimitiveMap } from "../../config/common"
@@ -37,7 +37,7 @@ export function getSystemMetadataNamespaceName(config: KubernetesConfig) {
 export async function getSystemGarden(
   ctx: KubernetesPluginContext,
   variables: DeepPrimitiveMap,
-  log: LogEntry
+  log: Log
 ): Promise<Garden> {
   const systemNamespace = await getSystemNamespace(ctx, ctx.provider, log)
 
@@ -88,7 +88,7 @@ export async function getSystemGarden(
 interface GetSystemServicesStatusParams {
   ctx: KubernetesPluginContext
   sysGarden: Garden
-  log: LogEntry
+  log: Log
   namespace: string
   names: string[]
 }

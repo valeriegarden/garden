@@ -17,7 +17,7 @@ import Bluebird from "bluebird"
 import { getStatsType, joinWithPosix, matchPath } from "../util/fs"
 import { dedent, deline } from "../util/string"
 import { exec, splitLast } from "../util/util"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import parseGitConfig from "parse-git-config"
 import { getDefaultProfiler, Profile, Profiler } from "../util/profiling"
 import { mapLimit } from "async"
@@ -92,7 +92,7 @@ export class GitHandler extends VcsHandler {
     this.lock = new AsyncLock()
   }
 
-  gitCli(log: LogEntry, cwd: string, failOnPrompt = false): GitCli {
+  gitCli(log: Log, cwd: string, failOnPrompt = false): GitCli {
     return async (...args: (string | undefined)[]) => {
       log.silly(`Calling git with args '${args.join(" ")}' in ${cwd}`)
       const { stdout } = await exec("git", args.filter(isString), {
@@ -136,7 +136,7 @@ export class GitHandler extends VcsHandler {
    * Git has stricter repository ownerships checks since 2.36.0,
    * see https://github.blog/2022-04-18-highlights-from-git-2-36/ for more details.
    */
-  private async ensureSafeDirGitRepo(log: LogEntry, path: string, failOnPrompt = false): Promise<void> {
+  private async ensureSafeDirGitRepo(log: Log, path: string, failOnPrompt = false): Promise<void> {
     if (this.gitSafeDirs.has(path)) {
       return
     }
@@ -204,7 +204,7 @@ export class GitHandler extends VcsHandler {
     })
   }
 
-  async getRepoRoot(log: LogEntry, path: string, failOnPrompt = false) {
+  async getRepoRoot(log: Log, path: string, failOnPrompt = false) {
     if (this.repoRoots.has(path)) {
       return this.repoRoots.get(path)
     }
@@ -528,7 +528,7 @@ export class GitHandler extends VcsHandler {
   }
 
   private async cloneRemoteSource(
-    log: LogEntry,
+    log: Log,
     repositoryUrl: string,
     hash: string,
     absPath: string,
@@ -691,7 +691,7 @@ export class GitHandler extends VcsHandler {
     return submodules
   }
 
-  async getPathInfo(log: LogEntry, path: string, failOnPrompt = false): Promise<VcsInfo> {
+  async getPathInfo(log: Log, path: string, failOnPrompt = false): Promise<VcsInfo> {
     const git = this.gitCli(log, path, failOnPrompt)
 
     const output: VcsInfo = {

@@ -59,7 +59,7 @@ import { pMemoizeDecorator } from "../lib/p-memoize"
 import { getCustomCommands } from "../commands/custom"
 import { Profile } from "../util/profiling"
 import { prepareDebugLogfiles } from "./debug-logs"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { JsonFileWriter } from "../logger/writers/json-file-writer"
 import { dedent } from "../util/string"
 import { renderDivider } from "../logger/util"
@@ -159,7 +159,7 @@ ${renderCommands(commands)}
     commandFullName,
   }: {
     logger: Logger
-    log: LogEntry
+    log: Log
     gardenDirPath: string
     commandFullName: string
   }) {
@@ -734,7 +734,7 @@ ${renderCommands(commands)}
 }
 
 export async function validateRuntimeRequirementsCached(
-  log: LogEntry,
+  log: Log,
   globalConfig: GlobalConfigStore,
   requirementCheckFunction: () => Promise<void>
 ) {

@@ -34,7 +34,7 @@ import tmp from "tmp-promise"
 import { realpath, readFile, writeFile } from "fs-extra"
 import { DEFAULT_API_VERSION, GARDEN_VERSIONFILE_NAME } from "../../../../src/constants"
 import { defaultDotIgnoreFile, fixedProjectExcludes } from "../../../../src/util/fs"
-import { LogEntry } from "../../../../src/logger/log-entry"
+import { Log } from "../../../../src/logger/log-entry"
 import { BaseActionConfig } from "../../../../src/actions/types"
 
 export class TestVcsHandler extends VcsHandler {
@@ -57,7 +57,7 @@ export class TestVcsHandler extends VcsHandler {
     }
   }
 
-  async getTreeVersion(log: LogEntry, projectName: string, moduleConfig: ModuleConfig) {
+  async getTreeVersion(log: Log, projectName: string, moduleConfig: ModuleConfig) {
     return this.testTreeVersions[moduleConfig.path] || super.getTreeVersion(log, projectName, moduleConfig)
   }
 

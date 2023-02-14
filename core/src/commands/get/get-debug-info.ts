@@ -12,7 +12,7 @@ import { ensureDir, copy, remove, pathExists, writeFile } from "fs-extra"
 import { getPackageVersion, safeDumpYaml } from "../../util/util"
 import { platform, release } from "os"
 import { join, relative, basename, dirname } from "path"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import { findConfigPathsInPath, defaultDotIgnoreFile } from "../../util/fs"
 import { ERROR_LOG_FILENAME } from "../../constants"
 import dedent = require("dedent")
@@ -38,9 +38,9 @@ export const PROVIDER_INFO_FILENAME_NO_EXT = "info"
  * @export
  * @param {string} root Project root path
  * @param {string} gardenDirPath Path to the Garden cache directory
- * @param {LogEntry} log Logger
+ * @param {Log} log Logger
  */
-export async function collectBasicDebugInfo(root: string, gardenDirPath: string, log: LogEntry) {
+export async function collectBasicDebugInfo(root: string, gardenDirPath: string, log: Log) {
   // Find project definition
   const projectConfig = await findProjectConfig(root, true)
   if (!projectConfig) {
@@ -108,9 +108,9 @@ export async function collectBasicDebugInfo(root: string, gardenDirPath: string,
  *
  * @export
  * @param {string} gardenDirPath Path to the Garden cache directory
- * @param {LogEntry} log Logger
+ * @param {Log} log Logger
  */
-export async function collectSystemDiagnostic(gardenDirPath: string, log: LogEntry, format: string) {
+export async function collectSystemDiagnostic(gardenDirPath: string, log: Log, format: string) {
   const tempPath = join(gardenDirPath, TEMP_DEBUG_ROOT)
   await ensureDir(tempPath)
 
@@ -138,11 +138,11 @@ export async function collectSystemDiagnostic(gardenDirPath: string, log: LogEnt
  *
  * @export
  * @param {Garden} garden The Garden instance
- * @param {LogEntry} log  Logger
+ * @param {Log} log  Logger
  * @param {string} format The extension format dictating the extension of the report
  * @param {string} includeProject Extended export
  */
-export async function collectProviderDebugInfo(garden: Garden, log: LogEntry, format: string, includeProject: boolean) {
+export async function collectProviderDebugInfo(garden: Garden, log: Log, format: string, includeProject: boolean) {
   const tempPath = join(garden.gardenDirPath, TEMP_DEBUG_ROOT)
   await ensureDir(tempPath)
   // Collect debug info from providers
@@ -166,12 +166,12 @@ export async function collectProviderDebugInfo(garden: Garden, log: LogEntry, fo
  *
  * @export
  * @param {string} root
- * @param {LogEntry} log
+ * @param {Log} log
  */
 export async function generateBasicDebugInfoReport(
   root: string,
   gardenDirPath: string,
-  log: LogEntry,
+  log: Log,
   format = "json"
 ) {
   log.setWarn({

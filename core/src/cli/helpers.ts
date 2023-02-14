@@ -20,7 +20,7 @@ import { Logger } from "../logger/logger"
 import { ParameterValues, Parameter, Parameters } from "./params"
 import { GardenBaseError, InternalError, ParameterError, toGardenError } from "../exceptions"
 import { getPackageVersion, removeSlice } from "../util/util"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { STATIC_DIR, VERSION_CHECK_URL, gardenEnv, ERROR_LOG_FILENAME } from "../constants"
 import { formatError, printWarningMessage } from "../logger/util"
 import { GlobalConfigStore } from "../config-store/global"
@@ -78,7 +78,7 @@ export async function checkRequirements() {
   await validateGitInstall()
 }
 
-export async function checkForUpdates(config: GlobalConfigStore, logger: LogEntry) {
+export async function checkForUpdates(config: GlobalConfigStore, logger: Log) {
   if (gardenEnv.GARDEN_DISABLE_VERSION_CHECK) {
     return
   }
@@ -226,7 +226,7 @@ export function processCliArgs<A extends Parameters, O extends Parameters>({
   inheritedOpts,
   warnOnGlobalOpts,
 }: {
-  log?: LogEntry
+  log?: Log
   rawArgs: string[]
   parsedArgs: minimist.ParsedArgs
   command: Command<A, O>
@@ -467,7 +467,7 @@ function renderParameters(params: Parameters, formatName: (name: string, param: 
 }
 
 // TODO @eysi: We shouldn't pass the logger and logEntry here
-export function renderCommandErrors(logger: Logger, errors: Error[], logEntry?: LogEntry) {
+export function renderCommandErrors(logger: Logger, errors: Error[], logEntry?: Log) {
   const gardenErrors: GardenBaseError[] = errors.map(toGardenError)
 
   const log = logEntry || logger.placeholder()

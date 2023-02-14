@@ -12,7 +12,7 @@ import { Garden, GardenOpts, GardenParams, resolveGardenParams } from "../garden
 import { DeepPrimitiveMap, StringMap } from "../config/common"
 import { ModuleConfig } from "../config/module"
 import { WorkflowConfig } from "../config/workflow"
-import { LogEntry, LogEntryNew } from "../logger/log-entry"
+import { Log, LogEntry } from "../logger/log-entry"
 import { GardenModule } from "../types/module"
 import { findByName, getNames, isPromise, uuidv4, ValueOf } from "./util"
 import { GardenBaseError, GardenError, InternalError } from "../exceptions"
@@ -48,7 +48,7 @@ export interface EventLogEntry {
  * Retrieves all the child log entries from the given LogEntry and returns a list of all the messages,
  * stripped of ANSI characters. Useful to check if a particular message was logged.
  */
-export function getLogMessages(log: LogEntry, filter?: (log: LogEntryNew) => boolean) {
+export function getLogMessages(log: Log, filter?: (log: LogEntry) => boolean) {
   return log
     .getChildEntries()
     .filter((entry) => (filter ? filter(entry) : true))
@@ -194,7 +194,7 @@ export class TestGarden extends Garden {
     return garden
   }
 
-  async processTasks(params: Omit<SolveParams, "log"> & { log?: LogEntry }) {
+  async processTasks(params: Omit<SolveParams, "log"> & { log?: Log }) {
     return super.processTasks({ ...params, log: params.log || this.log })
   }
 
@@ -202,7 +202,7 @@ export class TestGarden extends Garden {
    * Override to cache the config graph.
    */
   async getConfigGraph(params: {
-    log: LogEntry
+    log: Log
     graphResults?: GraphResults
     emit: boolean
     noCache?: boolean
@@ -276,7 +276,7 @@ export class TestGarden extends Garden {
     name,
     status,
   }: {
-    log: LogEntry
+    log: Log
     kind: ActionKind
     name: string
     status: ActionStatus<any>
@@ -302,7 +302,7 @@ export class TestGarden extends Garden {
     graphResults,
     includeDisabled = false,
   }: {
-    log: LogEntry
+    log: Log
     graphResults?: GraphResults
     includeDisabled?: boolean
   }): Promise<GardenModule[]> {

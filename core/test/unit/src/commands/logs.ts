@@ -23,7 +23,7 @@ import {
 import { DEFAULT_API_VERSION } from "../../../../src/constants"
 import { formatForTerminal } from "../../../../src/logger/renderers"
 import chalk from "chalk"
-import { LogEntry, LogEntryNew } from "../../../../src/logger/log-entry"
+import { Log, LogEntry } from "../../../../src/logger/log-entry"
 import { LogLevel } from "../../../../src/logger/logger"
 import { DeployLogEntry } from "../../../../src/types/service"
 import { execDeployActionSchema } from "../../../../src/plugins/exec/config"
@@ -80,7 +80,7 @@ async function makeGarden(tmpDir: tmp.DirectoryResult, plugin: GardenPlugin) {
 }
 
 // Returns all entries that match the logMsg as string, sorted by service name.
-function getLogOutput(garden: TestGarden, msg: string, extraFilter: (e: LogEntryNew) => boolean = () => true) {
+function getLogOutput(garden: TestGarden, msg: string, extraFilter: (e: LogEntry) => boolean = () => true) {
   const entries = garden.log
     .getChildEntries()
     .filter(extraFilter)

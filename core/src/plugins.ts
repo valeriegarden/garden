@@ -22,7 +22,7 @@ import { uniq, mapValues, fromPairs, flatten, keyBy, some, isString, sortBy, Dic
 import { findByName, pushToKey, getNames, isNotNull, MaybeUndefined } from "./util/util"
 import { deline } from "./util/string"
 import { validateSchema } from "./config/validation"
-import type { LogEntry } from "./logger/log-entry"
+import type { Log } from "./logger/log-entry"
 import { DependencyGraph } from "./graph/common"
 import { parse, resolve } from "path"
 import Bluebird from "bluebird"
@@ -32,7 +32,7 @@ import type { ActionTypeDefinition } from "./plugin/action-types"
 import { ObjectSchema } from "@hapi/joi"
 
 export async function loadAndResolvePlugins(
-  log: LogEntry,
+  log: Log,
   projectRoot: string,
   registeredPlugins: RegisterPluginParam[],
   configs: GenericProviderConfig[]
@@ -43,7 +43,7 @@ export async function loadAndResolvePlugins(
 }
 
 export function resolvePlugins(
-  log: LogEntry,
+  log: Log,
   loadedPlugins: Dictionary<GardenPlugin>,
   configs: GenericProviderConfig[]
 ) {
@@ -156,7 +156,7 @@ function validateOutputSchemas(
   }
 }
 
-export async function loadPlugin(log: LogEntry, projectRoot: string, nameOrPlugin: RegisterPluginParam) {
+export async function loadPlugin(log: Log, projectRoot: string, nameOrPlugin: RegisterPluginParam) {
   let plugin: GardenPlugin
 
   if (isString(nameOrPlugin)) {

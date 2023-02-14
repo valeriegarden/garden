@@ -39,7 +39,7 @@ import { compareDeployedResources } from "./status/status"
 import { PrimitiveMap } from "../../config/common"
 import { mapValues, omit } from "lodash"
 import { getIngressApiVersion, supportedIngressApiVersions } from "./container/ingress"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import { DeployStatusMap } from "../../plugin/handlers/Deploy/get-status"
 
 const dockerAuthSecretType = "kubernetes.io/dockerconfigjson"
@@ -188,7 +188,7 @@ export async function getEnvironmentStatus({
 export async function getIngressMisconfigurationWarnings(
   customIngressClassName: string | undefined,
   ingressApiVersion: string | undefined,
-  log: LogEntry,
+  log: Log,
   api: KubeApi
 ): Promise<String[]> {
   if (!customIngressClassName) {

@@ -13,7 +13,7 @@ import { Command, CommandParams, CommandResult } from "./base"
 import { dedent, wordWrap, deline } from "../util/string"
 import { Garden } from "../garden"
 import { WorkflowStepSpec, WorkflowConfig, WorkflowFileSpec } from "../config/workflow"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { GardenError, WorkflowScriptError } from "../exceptions"
 import {
   WorkflowConfigContext,
@@ -227,10 +227,10 @@ export class RunWorkflowCommand extends Command<Args, {}> {
 export interface RunStepParams {
   cli?: GardenCli
   garden: Garden
-  outerLog: LogEntry
-  headerLog: LogEntry
-  bodyLog: LogEntry
-  footerLog: LogEntry
+  outerLog: Log
+  headerLog: Log
+  bodyLog: Log
+  footerLog: Log
   inheritedOpts: ParameterValues<GlobalOptions>
   step: WorkflowStepSpec
   stepIndex: number
@@ -253,7 +253,7 @@ function getStepName(index: number, name?: string) {
 
 const minWidth = 120
 
-export function printStepHeader(log: LogEntry, stepIndex: number, stepCount: number, stepDescription?: string) {
+export function printStepHeader(log: Log, stepIndex: number, stepCount: number, stepDescription?: string) {
   const maxWidth = Math.min(getTerminalWidth(), minWidth)
   let text = `Running step ${formattedStepDescription(stepIndex, stepCount, stepDescription)}`
   const header = dedent`
@@ -302,7 +302,7 @@ function printResult({
   success,
 }: {
   startedAt: number
-  log: LogEntry
+  log: Log
   workflow: WorkflowConfig
   success: boolean
 }) {
@@ -449,7 +449,7 @@ export function shouldBeDropped(stepIndex: number, steps: WorkflowStepSpec[], st
 }
 
 export function logErrors(
-  log: LogEntry,
+  log: Log,
   errors: GardenError[],
   stepIndex: number,
   stepCount: number,
@@ -478,7 +478,7 @@ export function logErrors(
   }
 }
 
-async function registerAndSetUid(garden: Garden, log: LogEntry, config: WorkflowConfig) {
+async function registerAndSetUid(garden: Garden, log: Log, config: WorkflowConfig) {
   const { cloudApi } = garden
   if (cloudApi) {
     const workflowRunUid = await registerWorkflowRun({

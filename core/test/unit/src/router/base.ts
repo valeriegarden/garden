@@ -11,7 +11,7 @@ import { cloneDeep } from "lodash"
 import { ResolvedBuildAction } from "../../../../src/actions/build"
 import { joi } from "../../../../src/config/common"
 import { ConfigGraph } from "../../../../src/graph/config-graph"
-import { LogEntry } from "../../../../src/logger/log-entry"
+import { Log } from "../../../../src/logger/log-entry"
 import { ManyActionTypeDefinitions } from "../../../../src/plugin/action-types"
 import { createGardenPlugin, GardenPlugin } from "../../../../src/plugin/plugin"
 import { createActionRouter } from "../../../../src/router/base"
@@ -344,7 +344,7 @@ describe("BaseActionRouter", () => {
   describe("callHandler", () => {
     let garden: TestGarden
     let graph: ConfigGraph
-    let log: LogEntry
+    let log: Log
     let resolvedBuildAction: ResolvedBuildAction
     let testPlugins: GardenPlugin[]
 

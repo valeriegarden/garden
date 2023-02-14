@@ -9,7 +9,7 @@
 import { V1PodSpec } from "@kubernetes/client-node"
 import { skopeoDaemonContainerName, dockerAuthSecretKey, k8sUtilImageName } from "../../constants"
 import { KubeApi } from "../../api"
-import { LogEntry } from "../../../../logger/log-entry"
+import { Log } from "../../../../logger/log-entry"
 import { KubernetesProvider, KubernetesPluginContext, DEFAULT_KANIKO_IMAGE } from "../../config"
 import { BuildError, ConfigurationError } from "../../../../exceptions"
 import { PodRunner } from "../../run"
@@ -208,7 +208,7 @@ interface RunKanikoParams {
   kanikoNamespace: string
   utilNamespace: string
   authSecretName: string
-  log: LogEntry
+  log: Log
   action: ContainerBuildAction
   args: string[]
 }

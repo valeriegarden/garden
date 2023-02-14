@@ -7,7 +7,7 @@
  */
 
 import type { BaseTask, Task } from "../tasks/base"
-import type { LogEntry } from "../logger/log-entry"
+import type { Log } from "../logger/log-entry"
 import { GardenBaseError, toGardenError } from "../exceptions"
 import { uuidv4 } from "../util/util"
 import { DependencyGraph, metadataForLog } from "./common"
@@ -40,7 +40,7 @@ export interface SolveOpts {
 }
 
 export interface SolveParams<T extends BaseTask = BaseTask> extends SolveOpts {
-  log: LogEntry
+  log: Log
   tasks: T[]
 }
 
@@ -62,7 +62,7 @@ export class GraphSolver extends TypedEventEmitter<SolverEvents> {
 
   private inLoop: boolean
 
-  private log: LogEntry
+  private log: Log
   private lock: AsyncLock
 
   constructor(
@@ -483,7 +483,7 @@ export class GraphSolver extends TypedEventEmitter<SolverEvents> {
     this.logError(node.task.log, err, prefix)
   }
 
-  private logError(log: LogEntry, err: Error, errMessagePrefix: string) {
+  private logError(log: Log, err: Error, errMessagePrefix: string) {
     const error = toGardenError(err)
     const errorMessage = error.message.trim()
     const msg = renderMessageWithDivider(errMessagePrefix, errorMessage, true)

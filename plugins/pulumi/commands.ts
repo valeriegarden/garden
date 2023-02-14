@@ -11,7 +11,6 @@ import Bluebird from "bluebird"
 import {
   ConfigGraph,
   Garden,
-  LogEntry,
   PluginCommand,
   PluginCommandParams,
   PluginContext,
@@ -40,6 +39,7 @@ import { isDeployAction } from "@garden-io/core/build/src/actions/deploy"
 import { ActionConfigContext } from "@garden-io/core/build/src/config/template-contexts/actions"
 import { ActionTaskProcessParams, ValidResultType } from "@garden-io/core/build/src/tasks/base"
 import { deletePulumiDeploy } from "./handlers"
+import { Log } from "@garden-io/core/src/logger/log-entry"
 
 type PulumiBaseParams = Omit<PulumiParams, "action">
 
@@ -48,7 +48,7 @@ type PulumiRunFn = (params: PulumiParams) => Promise<any>
 interface PulumiCommandSpec {
   name: string
   commandDescription: string
-  beforeFn?: ({ ctx, log }: { ctx: PluginContext; log: LogEntry }) => Promise<any>
+  beforeFn?: ({ ctx, log }: { ctx: PluginContext; log: Log }) => Promise<any>
   runFn: PulumiRunFn
   afterFn?: ({
     ctx,
@@ -57,7 +57,7 @@ interface PulumiCommandSpec {
     pulumiTasks,
   }: {
     ctx: PluginContext
-    log: LogEntry
+    log: Log
     results: GraphResults
     pulumiTasks: PulumiPluginCommandTask[]
   }) => Promise<any>
@@ -179,7 +179,7 @@ const makePluginContextForDeploy = async (params: PulumiParams & { garden: Garde
 interface PulumiPluginCommandTaskParams {
   garden: Garden
   graph: ConfigGraph
-  log: LogEntry
+  log: Log
   action: PulumiDeploy
   commandName: string
   commandDescription: string

@@ -63,7 +63,7 @@ import {
   SupportedArchitecture,
   SUPPORTED_ARCHITECTURES,
 } from "./constants"
-import { LogEntry } from "./logger/log-entry"
+import { Log } from "./logger/log-entry"
 import { EventBus } from "./events"
 import { Watcher } from "./watch"
 import {
@@ -156,7 +156,7 @@ export interface GardenOpts {
   gardenDirPath?: string
   globalConfigStore?: GlobalConfigStore
   legacyBuildSync?: boolean
-  log?: LogEntry
+  log?: Log
   noEnterprise?: boolean
   persistent?: boolean
   plugins?: RegisterPluginParam[]
@@ -178,7 +178,7 @@ export interface GardenParams {
   namespace: string
   gardenDirPath: string
   globalConfigStore?: GlobalConfigStore
-  log: LogEntry
+  log: Log
   moduleIncludePatterns?: string[]
   moduleExcludePatterns?: string[]
   opts: GardenOpts
@@ -201,7 +201,7 @@ export interface GardenParams {
 
 @Profile()
 export class Garden {
-  public log: LogEntry
+  public log: Log
   private loadedPlugins: GardenPlugin[]
   protected actionConfigs: ActionConfigMap
   protected moduleConfigs: ModuleConfigMap
@@ -428,7 +428,7 @@ export class Garden {
     this.solver.clearCache()
   }
 
-  async emitWarning({ key, log, message }: { key: string; log: LogEntry; message: string }) {
+  async emitWarning({ key, log, message }: { key: string; log: Log; message: string }) {
     const existing = await this.configStore.get("warnings", key)
 
     if (!existing || !existing.hidden) {
@@ -447,7 +447,7 @@ export class Garden {
     return this.solver.solve(params)
   }
 
-  async processTask<T extends Task>(task: T, log: LogEntry, opts: SolveOpts): Promise<GraphResultFromTask<T> | null> {
+  async processTask<T extends Task>(task: T, log: Log, opts: SolveOpts): Promise<GraphResultFromTask<T> | null> {
     const { results } = await this.solver.solve({ tasks: [task], log, ...opts })
     return results.getResult(task)
   }
@@ -593,7 +593,7 @@ export class Garden {
     return names ? findByNames(names, this.providerConfigs, "provider") : this.providerConfigs
   }
 
-  async resolveProvider(log: LogEntry, name: string) {
+  async resolveProvider(log: Log, name: string) {
     if (name === "_default") {
       return defaultProvider
     }
@@ -622,7 +622,7 @@ export class Garden {
     return provider
   }
 
-  async resolveProviders(log: LogEntry, forceInit = false, names?: string[]): Promise<ProviderMap> {
+  async resolveProviders(log: Log, forceInit = false, names?: string[]): Promise<ProviderMap> {
     // TODO-G2: split this out of the Garden class
     let providers: Provider[] = []
 
@@ -786,7 +786,7 @@ export class Garden {
   /**
    * Returns the reported status from all configured providers.
    */
-  async getEnvironmentStatus(log: LogEntry) {
+  async getEnvironmentStatus(log: Log) {
     const providers = await this.resolveProviders(log)
     return mapValues(providers, (p) => p.status)
   }
@@ -818,7 +818,7 @@ export class Garden {
     return Object.values(keys ? pickKeys(this.moduleConfigs, keys, "module config") : this.moduleConfigs)
   }
 
-  async getOutputConfigContext(log: LogEntry, modules: GardenModule[], graphResults: GraphResults) {
+  async getOutputConfigContext(log: Log, modules: GardenModule[], graphResults: GraphResults) {
     const providers = await this.resolveProviders(log)
     return new OutputConfigContext({
       garden: this,
@@ -1023,7 +1023,7 @@ export class Garden {
     })
   }
 
-  async resolveAction<T extends Action>({ action, graph, log }: { action: T; log: LogEntry; graph?: ConfigGraph }) {
+  async resolveAction<T extends Action>({ action, graph, log }: { action: T; log: Log; graph?: ConfigGraph }) {
     if (!graph) {
       graph = await this.getConfigGraph({ log, emit: false })
     }
@@ -1037,7 +1037,7 @@ export class Garden {
     log,
   }: {
     actions: T[]
-    log: LogEntry
+    log: Log
     graph?: ConfigGraph
   }) {
     if (!graph) {
@@ -1047,7 +1047,7 @@ export class Garden {
     return resolveActions({ garden: this, actions, graph, log })
   }
 
-  async executeAction<T extends Action>({ action, graph, log }: { action: T; log: LogEntry; graph?: ConfigGraph }) {
+  async executeAction<T extends Action>({ action, graph, log }: { action: T; log: Log; graph?: ConfigGraph }) {
     if (!graph) {
       graph = await this.getConfigGraph({ log, emit: false })
     }
@@ -1059,7 +1059,7 @@ export class Garden {
    * Resolves the module version (i.e. build version) for the given module configuration and its build dependencies.
    */
   async resolveModuleVersion(
-    log: LogEntry,
+    log: Log,
     moduleConfig: ModuleConfig,
     moduleDependencies: GardenModule[],
     force = false
@@ -1388,7 +1388,7 @@ export class Garden {
     includeDisabled = false,
     partial = false,
   }: {
-    log: LogEntry
+    log: Log
     includeDisabled?: boolean
     partial?: boolean
   }): Promise<ConfigDump> {
@@ -1704,7 +1704,7 @@ export interface ConfigDump {
 }
 
 interface GetConfigGraphParams {
-  log: LogEntry
+  log: Log
   graphResults?: GraphResults
   emit: boolean
 }

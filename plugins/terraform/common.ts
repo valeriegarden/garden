@@ -10,7 +10,7 @@ import { resolve } from "path"
 import { mapValues, startCase } from "lodash"
 
 import { ConfigurationError, PluginError, RuntimeError } from "@garden-io/sdk/exceptions"
-import { LogEntry, PluginContext } from "@garden-io/sdk/types"
+import { Log, PluginContext } from "@garden-io/sdk/types"
 import { dedent } from "@garden-io/sdk/util/string"
 import { terraform } from "./cli"
 import { TerraformProvider } from "."
@@ -33,7 +33,7 @@ export interface TerraformBaseSpec {
 
 interface TerraformParams {
   ctx: PluginContext
-  log: LogEntry
+  log: Log
   provider: TerraformProvider
   root: string
 }

@@ -27,7 +27,7 @@ import { ProjectConfig } from "../../../../src/config/project"
 import { join } from "path"
 import { remove, readFile, pathExists } from "fs-extra"
 import { dedent } from "../../../../src/util/string"
-import { LogEntry, LogEntryNew } from "../../../../src/logger/log-entry"
+import { Log, LogEntry } from "../../../../src/logger/log-entry"
 import { defaultWorkflowResources, WorkflowStepSpec } from "../../../../src/config/workflow"
 
 describe("RunWorkflowCommand", () => {
@@ -164,7 +164,7 @@ describe("RunWorkflowCommand", () => {
     expect(we[6]).to.eql({ name: "workflowComplete", payload: {} })
   })
 
-  function filterLogEntries(entries: LogEntryNew[], msgRegex: RegExp): LogEntryNew[] {
+  function filterLogEntries(entries: LogEntry[], msgRegex: RegExp): LogEntry[] {
     return entries.filter((e) => msgRegex.test(e.msg || ""))
   }
 

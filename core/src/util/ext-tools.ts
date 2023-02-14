@@ -13,7 +13,7 @@ import { join, dirname, basename, posix } from "path"
 import { hashString, exec, uuidv4, getPlatform, getArchitecture, isDarwinARM } from "./util"
 import tar from "tar"
 import { GARDEN_GLOBAL_PATH } from "../constants"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { createHash } from "crypto"
 import crossSpawn from "cross-spawn"
 import { spawn } from "./util"
@@ -36,7 +36,7 @@ export interface ExecParams {
   args?: string[]
   cwd?: string
   env?: { [key: string]: string }
-  log: LogEntry
+  log: Log
   timeoutSec?: number
   input?: Buffer | string
   ignoreError?: boolean
@@ -58,7 +58,7 @@ export class CliWrapper {
     this.toolPath = path
   }
 
-  async getPath(_: LogEntry) {
+  async getPath(_: Log) {
     return this.toolPath
   }
 
@@ -129,7 +129,7 @@ export class CliWrapper {
     log,
     ctx,
     errorPrefix,
-  }: SpawnParams & { errorPrefix: string; ctx: PluginContext; statusLine?: LogEntry }) {
+  }: SpawnParams & { errorPrefix: string; ctx: PluginContext; statusLine?: Log }) {
     const proc = await this.spawn({ args, cwd, env, log })
 
     const logStream = split2()
@@ -272,7 +272,7 @@ export class PluginTool extends CliWrapper {
     this.chmodDone = false
   }
 
-  async getPath(log: LogEntry) {
+  async getPath(log: Log) {
     await this.download(log)
     const path = join(this.versionPath, ...this.targetSubpath.split(posix.sep))
 
@@ -287,7 +287,7 @@ export class PluginTool extends CliWrapper {
     return path
   }
 
-  protected async download(log: LogEntry) {
+  protected async download(log: Log) {
     return lock.acquire(this.versionPath, async () => {
       if (await pathExists(this.versionPath)) {
         return
@@ -329,7 +329,7 @@ export class PluginTool extends CliWrapper {
     })
   }
 
-  protected async fetch(tmpPath: string, log: LogEntry) {
+  protected async fetch(tmpPath: string, log: Log) {
     const parsed = parse(this.buildSpec.url)
     const protocol = parsed.protocol
 

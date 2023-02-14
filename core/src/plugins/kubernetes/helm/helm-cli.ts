@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LogEntry } from "../../../logger/log-entry"
+import { Log } from "../../../logger/log-entry"
 import { KubernetesPluginContext } from "../config"
 import { join } from "path"
 import { GARDEN_GLOBAL_PATH } from "../../../constants"
@@ -77,7 +77,7 @@ export async function helm({
 }: {
   ctx: KubernetesPluginContext
   namespace?: string
-  log: LogEntry
+  log: Log
   args: string[]
   version?: 2 | 3
   env?: { [key: string]: string }

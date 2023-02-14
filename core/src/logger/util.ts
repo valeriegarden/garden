@@ -9,7 +9,7 @@
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
 import { formatGardenErrorWithDetail, getLogger } from "./logger"
-import { LogEntry, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
+import { Log, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
 import dedent from "dedent"
 import stringWidth from "string-width"
@@ -30,11 +30,11 @@ export type LogOptsResolvers = { [K in keyof LogEntryParams]?: Function }
 
 export type ProcessNode<T extends Node = Node> = (node: T) => boolean
 
-export function findParentEntry(entry: LogEntry, predicate: ProcessNode<LogEntry>): LogEntry | null {
+export function findParentEntry(entry: Log, predicate: ProcessNode<Log>): Log | null {
   return predicate(entry) ? entry : entry.parent ? findParentEntry(entry.parent, predicate) : null
 }
 
-export function getAllSections(entry: LogEntry, msg: LogEntryMessage) {
+export function getAllSections(entry: Log, msg: LogEntryMessage) {
   const sections: string[] = []
   let parent = entry.parent
 
@@ -52,7 +52,7 @@ export function getAllSections(entry: LogEntry, msg: LogEntryMessage) {
 /**
  * Returns the entry's section or first parent section it finds.
  */
-export function findSection(entry: LogEntry): string | null {
+export function findSection(entry: Log): string | null {
   const section = entry.getLatestMessage().section
   if (section) {
     return section
@@ -133,17 +133,17 @@ export function printEmoji(emoji: EmojiName) {
   return ""
 }
 
-export function printHeader(log: LogEntry, command: string, emoji: EmojiName): void {
+export function printHeader(log: Log, command: string, emoji: EmojiName): void {
   log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji))
   log.info("") // Print new line after header
 }
 
-export function printFooter(log: LogEntry) {
+export function printFooter(log: Log) {
   log.info("") // Print new line before footer
   return log.info(chalk.bold.magenta("Done!") + " " + printEmoji("heavy_check_mark"))
 }
 
-export function printWarningMessage(log: LogEntry, text: string) {
+export function printWarningMessage(log: Log, text: string) {
   return log.info({ emoji: "warning", msg: chalk.bold.yellow(text) })
 }
 

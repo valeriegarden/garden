@@ -9,7 +9,7 @@
 import Bluebird from "bluebird"
 
 import { Events, EventName, EventBus, pipedEventNames } from "../events"
-import { LogEntryMetadata, LogEntry, LogEntryMessage, LogEntryNew } from "../logger/log-entry"
+import { LogEntryMetadata, Log, LogEntryMessage, LogEntry } from "../logger/log-entry"
 import { got } from "../util/http"
 
 import { LogLevel } from "../logger/logger"
@@ -33,7 +33,7 @@ export interface LogEntryEventPayload {
 }
 
 // TODO @eysi: Revisit shape.
-export function formatLogEntryForEventStream(entry: LogEntryNew): LogEntryEventPayload {
+export function formatLogEntryForEventStream(entry: LogEntry): LogEntryEventPayload {
   return {
     key: entry.key,
     metadata: entry.metadata,
@@ -91,7 +91,7 @@ export interface ApiLogBatch extends ApiBatchBase {
 export const controlEventNames: Set<EventName> = new Set(["_workflowRunRegistered"])
 
 export interface BufferedEventStreamParams {
-  log: LogEntry
+  log: Log
   cloudApi?: CloudApi
   sessionId: string
 }
@@ -106,7 +106,7 @@ export interface BufferedEventStreamParams {
  * any) e.g. when config changes during a watch-mode command.
  */
 export class BufferedEventStream {
-  protected log: LogEntry
+  protected log: Log
   protected cloudApi?: CloudApi
   public sessionId: string
 

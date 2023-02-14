@@ -25,7 +25,7 @@ import { dedent, gardenAnnotationKey } from "../../util/string"
 import { cloneDeep, omit, set } from "lodash"
 import { getResourceContainer, getResourcePodSpec, getTargetResource, labelSelectorToString } from "./util"
 import { KubernetesResource, SupportedRuntimeActions, SyncableKind, syncableKinds, SyncableResource } from "./types"
-import { LogEntry } from "../../logger/log-entry"
+import { Log } from "../../logger/log-entry"
 import chalk from "chalk"
 import {
   ensureMutagenSync,
@@ -286,7 +286,7 @@ export async function configureDevMode({
   spec,
 }: {
   ctx: PluginContext
-  log: LogEntry
+  log: Log
   provider: KubernetesProvider
   action: Resolved<SupportedRuntimeActions>
   defaultTarget: KubernetesTargetResourceSpec | undefined
@@ -444,7 +444,7 @@ export async function configureDevMode({
 
 interface StartDevModeSyncParams {
   ctx: KubernetesPluginContext
-  log: LogEntry
+  log: Log
   action: Resolved<SupportedRuntimeActions>
   defaultNamespace: string
   manifests: KubernetesResource[]

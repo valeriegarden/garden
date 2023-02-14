@@ -21,7 +21,7 @@ import { omit } from "lodash"
 import { Garden } from "../garden"
 import { prepareCommands, parseRequest, CommandMap } from "./commands"
 import { gardenEnv } from "../constants"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { Command, CommandResult } from "../commands/base"
 import { toGardenError, GardenError } from "../exceptions"
 import { EventName, Events, EventBus, GardenEventListener } from "../events"
@@ -67,7 +67,7 @@ const websocketCloseEvents: WebsocketCloseEvents = {
 }
 
 interface GardenServerParams {
-  log: LogEntry
+  log: Log
   command: ServeCommand
   port?: number
 }
@@ -94,8 +94,8 @@ export async function startServer(params: GardenServerParams) {
 }
 
 export class GardenServer extends EventEmitter {
-  private log: LogEntry
-  private debugLog: LogEntry
+  private log: Log
+  private debugLog: Log
   private server: Server
   private garden: Garden | undefined
   private commands: CommandMap
@@ -104,7 +104,7 @@ export class GardenServer extends EventEmitter {
   private app: websockify.App
   private analytics?: AnalyticsHandler
   private incomingEvents: EventBus
-  private statusLog: LogEntry
+  private statusLog: Log
   private serversUpdatedListener: GardenEventListener<"serversUpdated">
   private activePersistentRequests: { [requestId: string]: { command: Command; connectionId: string } }
 

@@ -84,7 +84,7 @@ export interface LogEntryParams extends UpdateLogEntryParams {
 export interface LogEntryConstructor extends LogEntryParams {
   level: LogLevel
   root: Logger
-  parent?: LogEntry
+  parent?: Log
 }
 
 export interface ActionLogEntryConstructor extends LogEntryConstructor {
@@ -140,7 +140,7 @@ interface LogEntryBase {
 }
 
 // TODO @eysi: Rename to LogEntry
-export interface LogEntryNew extends LogEntryBase {
+export interface LogEntry extends LogEntryBase {
   type: "logEntry"
 }
 
@@ -156,10 +156,10 @@ interface PluginLogEntry extends LogEntryBase {
 }
 
 // TODO @eysi: Rename to Log
-export class LogEntry implements LogNode {
+export class Log implements LogNode {
   private messages: LogEntryMessage[]
   private metadata?: LogEntryMetadata
-  public readonly parent?: LogEntry
+  public readonly parent?: Log
   public readonly timestamp: Date
   public readonly key: string
   public readonly level: LogLevel
@@ -171,7 +171,7 @@ export class LogEntry implements LogNode {
   public readonly childEntriesInheritLevel?: boolean
   public readonly id?: string
   public type: "logEntry"
-  public children: LogEntryNew[]
+  public children: LogEntry[]
   public revision: number
 
   constructor(params: LogEntryConstructor) {
@@ -207,7 +207,7 @@ export class LogEntry implements LogNode {
       metadata = { ...cloneDeep(this.metadata || {}), ...(params.metadata || {}) }
     }
 
-    const logEntry: LogEntryNew = {
+    const logEntry: LogEntry = {
       type: "logEntry",
       section: this.section,
       ...params,
@@ -246,7 +246,7 @@ export class LogEntry implements LogNode {
    * TODO: Overwrite with params
    */
   makeNewLogContext(params: Partial<LogEntryConstructor>) {
-    return new LogEntry({
+    return new Log({
       level: params.level || this.level,
       parent: this,
       root: this.root,
@@ -263,7 +263,7 @@ export class LogEntry implements LogNode {
    * TODO: Overwrite with params
    */
   makeNewLogContextWithMessage(params: Partial<LogEntryConstructor>) {
-    const newLog = new LogEntry({
+    const newLog = new Log({
       level: params.level || this.level,
       parent: this,
       root: this.root,
@@ -330,10 +330,10 @@ export class LogEntry implements LogNode {
     childEntriesInheritLevel = false,
     indent = 0,
     metadata,
-  }: PlaceholderOpts = {}): LogEntry {
+  }: PlaceholderOpts = {}): Log {
     // Ensure placeholder child entries align with parent context
     const currentIndentation = Math.max((indent || this.indent || 0) - 1, -1)
-    return new LogEntry({
+    return new Log({
       indent: currentIndentation,
       level,
       metadata,
@@ -404,7 +404,7 @@ export class LogEntry implements LogNode {
    *
    * TODO @eysi: Fix, this currently dumps all entries.
    */
-  toString(filter?: (log: LogEntryNew) => boolean) {
+  toString(filter?: (log: LogEntry) => boolean) {
     return this.getChildEntries()
       .filter((entry) => (filter ? filter(entry) : true))
       // .flatMap((entry) => entry.getMessages()?.map((message) => message.msg))

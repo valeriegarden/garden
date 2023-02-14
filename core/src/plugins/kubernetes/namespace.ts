@@ -15,7 +15,7 @@ import { DeploymentError, TimeoutError } from "../../exceptions"
 import { getPackageVersion, sleep } from "../../util/util"
 import type { GetEnvironmentStatusParams } from "../../plugin/handlers/Provider/getEnvironmentStatus"
 import { KUBECTL_DEFAULT_TIMEOUT } from "./kubectl"
-import type { LogEntry } from "../../logger/log-entry"
+import type { Log } from "../../logger/log-entry"
 import { gardenAnnotationKey } from "../../util/string"
 import dedent from "dedent"
 import type { V1Namespace } from "@kubernetes/client-node"
@@ -48,7 +48,7 @@ interface EnsureNamespaceResult {
 export async function ensureNamespace(
   api: KubeApi,
   namespace: NamespaceConfig,
-  log: LogEntry
+  log: Log
 ): Promise<EnsureNamespaceResult> {
   const result: EnsureNamespaceResult = { patched: false, created: false }
 
@@ -141,7 +141,7 @@ export async function namespaceExists(api: KubeApi, name: string): Promise<boole
 }
 
 interface GetNamespaceParams {
-  log: LogEntry
+  log: Log
   override?: NamespaceConfig
   ctx: PluginContext
   provider: KubernetesProvider
@@ -183,7 +183,7 @@ export async function getNamespaceStatus({
 export async function getSystemNamespace(
   ctx: PluginContext,
   provider: KubernetesProvider,
-  log: LogEntry,
+  log: Log,
   api?: KubeApi
 ): Promise<string> {
   const namespace = { name: provider.config.gardenSystemNamespace }
@@ -198,7 +198,7 @@ export async function getSystemNamespace(
 
 export async function getAppNamespace(
   ctx: PluginContext,
-  log: LogEntry,
+  log: Log,
   provider: KubernetesProvider
 ): Promise<string> {
   const status = await getNamespaceStatus({
@@ -211,7 +211,7 @@ export async function getAppNamespace(
 
 export async function getAppNamespaceStatus(
   ctx: PluginContext,
-  log: LogEntry,
+  log: Log,
   provider: KubernetesProvider
 ): Promise<NamespaceStatus> {
   return getNamespaceStatus({
@@ -255,7 +255,7 @@ export async function prepareNamespaces({ ctx, log }: GetEnvironmentStatusParams
   }
 }
 
-export async function deleteNamespaces(namespaces: string[], api: KubeApi, log?: LogEntry) {
+export async function deleteNamespaces(namespaces: string[], api: KubeApi, log?: Log) {
   for (const ns of namespaces) {
     try {
       // Note: Need to call the delete method with an empty object
@@ -299,7 +299,7 @@ export async function getActionNamespace({
   skipCreate,
 }: {
   ctx: KubernetesPluginContext
-  log: LogEntry
+  log: Log
   action: Resolved<SupportedRuntimeActions>
   provider: KubernetesProvider
   skipCreate?: boolean
@@ -322,7 +322,7 @@ export async function getActionNamespaceStatus({
   skipCreate,
 }: {
   ctx: KubernetesPluginContext
-  log: LogEntry
+  log: Log
   action: Resolved<SupportedRuntimeActions>
   provider: KubernetesProvider
   skipCreate?: boolean

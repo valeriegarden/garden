@@ -9,7 +9,7 @@
 import { GraphResults } from "../graph/results"
 import { v1 as uuidv1 } from "uuid"
 import { Garden } from "../garden"
-import { LogEntry as LogEntry } from "../logger/log-entry"
+import { Log as Log } from "../logger/log-entry"
 import { Profile } from "../util/profiling"
 import type { Action, ActionState, Executed, Resolved } from "../actions/types"
 import { ConfigGraph, GraphError } from "../graph/config-graph"
@@ -35,7 +35,7 @@ export function makeBaseKey(type: string, name: string) {
 
 interface CommonTaskParams {
   garden: Garden
-  log: LogEntry
+  log: Log
   force: boolean
   skipDependencies?: boolean
 }
@@ -45,7 +45,7 @@ export interface BaseTaskParams extends CommonTaskParams {
 }
 
 export interface BaseActionTaskParams<T extends Action = Action> extends CommonTaskParams {
-  log: LogEntry
+  log: Log
   action: T
   graph: ConfigGraph
   devModeDeployNames: string[]
@@ -90,7 +90,7 @@ export abstract class BaseTask<O extends ValidResultType = ValidResultType, S ex
   concurrencyLimit = 10
 
   public readonly garden: Garden
-  public readonly log: LogEntry
+  public readonly log: Log
   public readonly uid: string
   public readonly force: boolean
   public readonly version: string

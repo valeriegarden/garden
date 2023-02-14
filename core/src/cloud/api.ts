@@ -10,7 +10,7 @@ import { IncomingHttpHeaders } from "http"
 
 import { got, GotHeaders, GotHttpError, GotJsonOptions, GotResponse } from "../util/http"
 import { EnterpriseApiError } from "../exceptions"
-import { LogEntry } from "../logger/log-entry"
+import { Log } from "../logger/log-entry"
 import { gardenEnv } from "../constants"
 import { Cookie } from "tough-cookie"
 import { isObject } from "lodash"
@@ -171,7 +171,7 @@ export class CloudApi {
   public namespaceId?: number
   public sessionRegistered = false
 
-  constructor(private log: LogEntry, public domain: string, private globalConfigStore: GlobalConfigStore) { }
+  constructor(private log: Log, public domain: string, private globalConfigStore: GlobalConfigStore) { }
 
   /**
    * Initialize the Cloud API.
@@ -188,7 +188,7 @@ export class CloudApi {
     globalConfigStore,
     skipLogging = false,
   }: {
-    log: LogEntry
+    log: Log
     cloudDomain: string
     globalConfigStore: GlobalConfigStore
     skipLogging?: boolean
@@ -248,7 +248,7 @@ export class CloudApi {
   }
 
   static async saveAuthToken(
-    log: LogEntry,
+    log: Log,
     globalConfigStore: GlobalConfigStore,
     tokenResponse: AuthTokenResponse,
     domain: string
@@ -282,7 +282,7 @@ export class CloudApi {
    * In the inconsistent/erroneous case of more than one auth token existing in the local store, picks the first auth
    * token and deletes all others.
    */
-  static async getStoredAuthToken(log: LogEntry, globalConfigStore: GlobalConfigStore, domain: string) {
+  static async getStoredAuthToken(log: Log, globalConfigStore: GlobalConfigStore, domain: string) {
     log.silly(`Retrieving client auth token from config store`)
     return globalConfigStore.get("clientAuthTokens", domain)
   }
@@ -295,7 +295,7 @@ export class CloudApi {
    * present.
    */
   static async getAuthToken(
-    log: LogEntry,
+    log: Log,
     globalConfigStore: GlobalConfigStore,
     domain: string
   ): Promise<string | undefined> {
@@ -310,7 +310,7 @@ export class CloudApi {
   /**
    * If a persisted client auth token exists, deletes it.
    */
-  static async clearAuthToken(log: LogEntry, globalConfigStore: GlobalConfigStore, domain: string) {
+  static async clearAuthToken(log: Log, globalConfigStore: GlobalConfigStore, domain: string) {
     await globalConfigStore.delete("clientAuthTokens", domain)
     log.debug("Cleared persisted auth token (if any)")
   }
@@ -494,7 +494,7 @@ export class CloudApi {
     }
 
     if (retry) {
-      let retryLog: LogEntry | undefined = undefined
+      let retryLog: Log | undefined = undefined
       const retryLimit = params.maxRetries || 3
       requestOptions.retry = {
         methods: ["GET", "POST", "PUT", "DELETE"], // We explicitly include the POST method if `retry = true`.

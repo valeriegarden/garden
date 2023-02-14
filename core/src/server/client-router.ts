@@ -7,7 +7,7 @@
  */
 
 import { Garden } from ".."
-import { EmojiName, LogEntry } from "../logger/log-entry"
+import { EmojiName, Log } from "../logger/log-entry"
 import chalk from "chalk"
 import { BuildTask } from "../tasks/build"
 import { DeployTask } from "../tasks/deploy"
@@ -19,9 +19,9 @@ import { moduleTestNameToActionName } from "../types/module"
 
 export class ClientRouter {
   private garden: Garden
-  private log: LogEntry
+  private log: Log
 
-  constructor(garden: Garden, log: LogEntry) {
+  constructor(garden: Garden, log: Log) {
     this.garden = garden
     this.log = log
   }
@@ -187,7 +187,7 @@ export const clientRequestNames = [
 export interface ClientRequestHandlerCommonParams {
   garden: Garden
   graph: ConfigGraph
-  log: LogEntry
+  log: Log
 }
 
 /*
