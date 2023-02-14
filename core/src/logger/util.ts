@@ -9,7 +9,7 @@
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
 import { formatGardenErrorWithDetail, getLogger } from "./logger"
-import { Log, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
+import { Log, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
 import dedent from "dedent"
 import stringWidth from "string-width"
@@ -22,16 +22,14 @@ export function envSupportsEmoji() {
   )
 }
 
-export interface Node {
-  children: any[]
+export interface LogLike {
+  entries: any[]
 }
 
-export type LogOptsResolvers = { [K in keyof LogEntryParams]?: Function }
+export type ProcessLog<T extends LogLike = LogLike> = (node: T) => boolean
 
-export type ProcessNode<T extends Node = Node> = (node: T) => boolean
-
-export function findParentEntry(entry: Log, predicate: ProcessNode<Log>): Log | null {
-  return predicate(entry) ? entry : entry.parent ? findParentEntry(entry.parent, predicate) : null
+export function findParentEntry(log: Log, predicate: ProcessLog<Log>): Log | null {
+  return predicate(log) ? log : log.parent ? findParentEntry(log.parent, predicate) : null
 }
 
 export function getAllSections(entry: Log, msg: LogEntryMessage) {

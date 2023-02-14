@@ -166,19 +166,19 @@ export function getWriterInstance(loggerType: LoggerType, level: LogLevel) {
   }
 }
 
-export interface LoggerConfigBase {
+export interface LogWriterConfigBase {
   level: LogLevel
   storeEntries?: boolean
   showTimestamps?: boolean
   useEmoji?: boolean
 }
 
-export interface LoggerConfig extends LoggerConfigBase {
+export interface LogWriterConfig extends LogWriterConfigBase {
   type: LoggerType
   storeEntries: boolean
 }
 
-export interface LoggerConstructor extends LoggerConfigBase {
+export interface LogWriterConstructor extends LogWriterConfigBase {
   writers: Writer[]
   storeEntries: boolean
 }
@@ -189,7 +189,7 @@ export interface CreateLogEntryParams extends LogEntryParams {
 
 export interface PlaceholderOpts {
   level?: number
-  childEntriesInheritLevel?: boolean
+  fixLevel?: boolean
   indent?: number
   metadata?: LogEntryMetadata
 }
@@ -200,11 +200,9 @@ export class LogWriter {
   public useEmoji: boolean
   public showTimestamps: boolean
   public level: LogLevel
-  public children: LogEntry[]
+  public entries: LogEntry[]
   /**
-   * Whether or not the log entries are stored in-memory on the logger instance.
-   * Defaults to false except when the FancyWriter is used, in which case storing the entries
-   * is required. Otherwise useful for testing.
+   * Whether or not the log entries are stored in-memory on the logger instance. Useful for testing.
    */
   public storeEntries: boolean
 
@@ -222,7 +220,7 @@ export class LogWriter {
    * Initializes the logger as a singleton from config. Also ensures that the logger settings make sense
    * in the context of environment variables and writer types.
    */
-  static initialize(config: LoggerConfig): LogWriter {
+  static initialize(config: LogWriterConfig): LogWriter {
     if (LogWriter.instance) {
       return LogWriter.instance
     }
@@ -277,9 +275,9 @@ export class LogWriter {
     LogWriter.instance = undefined
   }
 
-  constructor(config: LoggerConstructor) {
+  constructor(config: LogWriterConstructor) {
     this.level = config.level
-    this.children = []
+    this.entries = []
     this.writers = config.writers || []
     this.useEmoji = config.useEmoji === false ? false : true
     this.showTimestamps = !!config.showTimestamps
@@ -297,7 +295,7 @@ export class LogWriter {
 
   log(entry: LogEntry) {
     if (this.storeEntries) {
-      this.children.push(entry)
+      this.entries.push(entry)
     }
     if (entry.level <= eventLogLevel) {
       this.events.emit("logEntry", formatLogEntryForEventStream(entry))
@@ -331,21 +329,21 @@ export class LogWriter {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot get entries when storeEntries=false`, {})
     }
-    return this.children
+    return this.entries
   }
 
   filterBySection(section: string): LogEntry[] {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot filter entries when storeEntries=false`, {})
     }
-    return this.children.filter((entry) => entry.section === section)
+    return this.entries.filter((entry) => entry.section === section)
   }
 
   findById(id: string): LogEntry | void {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot find entry when storeEntries=false`, {})
     }
-    return this.children.find((entry) => entry.id === id)
+    return this.entries.find((entry) => entry.id === id)
   }
 
   stop(): void {

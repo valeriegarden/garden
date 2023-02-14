@@ -63,7 +63,7 @@ export function parseRequest(ctx: Koa.ParameterizedContext, log: Log, commands: 
   const command = commandSpec.command
 
   // We generally don't want actions to log anything in the server.
-  const cmdLog = log.placeholder({ level: LogLevel.silly, childEntriesInheritLevel: true })
+  const cmdLog = log.placeholder({ level: LogLevel.silly, fixLevel: true })
 
   const cmdArgs = mapParams(ctx, request.parameters, command.arguments)
   const optParams = extend({ ...globalOptions, ...command.options })

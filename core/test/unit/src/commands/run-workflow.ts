@@ -101,7 +101,7 @@ describe("RunWorkflowCommand", () => {
     ])
 
     await cmd.action({ ..._defaultParams, args: { workflow: "workflow-a" } })
-    const entries = _garden.log.getChildEntries()
+    const entries = _garden.log.getLogEntries()
     const stepHeaderEntries = filterLogEntries(entries, /Running step/)
     const stepBodyEntries = filterLogEntries(entries, /Starting processActions/)
     const stepFooterEntries = filterLogEntries(entries, /Step.*completed/)

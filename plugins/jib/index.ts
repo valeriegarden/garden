@@ -180,7 +180,7 @@ export const gardenPlugin = () =>
                 openJdkPath = await openJdk.getPath(log)
               }
 
-              const statusLine = log.placeholder({ level: LogLevel.verbose, childEntriesInheritLevel: true })
+              const statusLine = log.placeholder({ level: LogLevel.verbose, fixLevel: true })
 
               let projectType = spec.projectType
 

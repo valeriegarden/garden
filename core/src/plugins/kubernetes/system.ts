@@ -80,7 +80,7 @@ export async function getSystemGarden(
       level: LogLevel.debug,
       msg: "Initializing...",
       indent: 1,
-      childEntriesInheritLevel: true,
+      fixLevel: true,
     }),
   })
 }
@@ -98,7 +98,7 @@ export async function getSystemServiceStatus({ sysGarden, log, names }: GetSyste
   const graph = await sysGarden.getConfigGraph({ log, emit: false })
 
   const serviceStatuses = await actions.getDeployStatuses({
-    log: log.placeholder({ level: LogLevel.verbose, childEntriesInheritLevel: true }),
+    log: log.placeholder({ level: LogLevel.verbose, fixLevel: true }),
     graph,
     names,
   })
