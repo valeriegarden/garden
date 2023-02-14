@@ -216,7 +216,7 @@ const logLevelArguments = {
 type LogLevelArguments = typeof logLevelArguments
 
 // These are the only writers for which we want to dynamically update the log level
-const displayWriterTypes = ["basic", "ink", "fancy"]
+const displayWriterTypes = ["basic", "ink"]
 
 class LogLevelCommand extends InteractiveCommand<LogLevelArguments> {
   name = "log-level"

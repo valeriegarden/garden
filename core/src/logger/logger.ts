@@ -19,8 +19,8 @@ import { isArray, isEmpty, isPlainObject, mapValues, range } from "lodash"
 import { isPrimitive } from "../config/common"
 import { InkTerminalWriter } from "./writers/ink-terminal-writer"
 
-export type LoggerType = "quiet" | "basic" | "fancy" | "json" | "ink"
-export const LOGGER_TYPES = new Set<LoggerType>(["quiet", "basic", "fancy", "json", "ink"])
+export type LoggerType = "quiet" | "basic" | "json" | "ink"
+export const LOGGER_TYPES = new Set<LoggerType>(["quiet", "basic", "json", "ink"])
 
 export enum LogLevel {
   error = 0,
@@ -105,7 +105,7 @@ export function sanitizeValue(value: any, _parents?: WeakSet<any>): any {
     return value
   } else if (Buffer.isBuffer(value)) {
     return "<Buffer>"
-  } else if (value instanceof Logger) {
+  } else if (value instanceof LogWriter) {
     return "<Logger>"
   } else if (value instanceof Log) {
     return "<LogEntry>"
@@ -157,9 +157,6 @@ export function getWriterInstance(loggerType: LoggerType, level: LogLevel) {
   switch (loggerType) {
     case "basic":
       return new BasicTerminalWriter({ level })
-    case "fancy":
-      return new BasicTerminalWriter({ level })
-    //   return new FancyTerminalWriter({ level })
     case "json":
       return new JsonTerminalWriter({ level })
     case "ink":
@@ -197,24 +194,8 @@ export interface PlaceholderOpts {
   metadata?: LogEntryMetadata
 }
 
-export interface LogNode {
-  silly(params: string | LogEntryParams): void
-  debug(params: string | LogEntryParams): void
-  verbose(params: string | LogEntryParams): void
-  info(params: string | LogEntryParams): void
-  warn(params: string | LogEntryParams): void
-  error(params: string | LogEntryParams): void
-}
-
-function resolveParams(level: LogLevel, params: string | LogEntryParams): CreateLogEntryParams {
-  if (typeof params === "string") {
-    return { msg: params, level }
-  }
-  return { ...params, level }
-}
-
 // TODO @eysi: Rename.
-export class Logger {
+export class LogWriter {
   public events: EventBus
   public useEmoji: boolean
   public showTimestamps: boolean
@@ -228,25 +209,25 @@ export class Logger {
   public storeEntries: boolean
 
   private writers: Writer[]
-  private static instance?: Logger
+  private static instance?: LogWriter
 
   static getInstance() {
-    if (!Logger.instance) {
+    if (!LogWriter.instance) {
       throw new InternalError("Logger not initialized", {})
     }
-    return Logger.instance
+    return LogWriter.instance
   }
 
   /**
    * Initializes the logger as a singleton from config. Also ensures that the logger settings make sense
    * in the context of environment variables and writer types.
    */
-  static initialize(config: LoggerConfig): Logger {
-    if (Logger.instance) {
-      return Logger.instance
+  static initialize(config: LoggerConfig): LogWriter {
+    if (LogWriter.instance) {
+      return LogWriter.instance
     }
 
-    let instance: Logger
+    let instance: LogWriter
 
     // The GARDEN_LOG_LEVEL env variable takes precedence over the config param
     if (gardenEnv.GARDEN_LOG_LEVEL) {
@@ -271,15 +252,9 @@ export class Logger {
       config.type = loggerTypeFromEnv
     }
 
-    // The fancy logger doesn't play well with high log levels and/or timestamps
-    // so we enforce that the type is set to basic.
-    if (config.type === "fancy" && (config.level > LogLevel.info || config.showTimestamps)) {
-      config.type = "basic"
-    }
-
     const writer = getWriterInstance(config.type, config.level)
 
-    instance = new Logger({ ...config, storeEntries: config.storeEntries, writers: writer ? [writer] : [] })
+    instance = new LogWriter({ ...config, storeEntries: config.storeEntries, writers: writer ? [writer] : [] })
 
     // TODO: @eysi
     const log = instance.placeholder()
@@ -291,7 +266,7 @@ export class Logger {
       log.debug(`Setting logger type to ${gardenEnv.GARDEN_LOGGER_TYPE} (from GARDEN_LOGGER_TYPE)`)
     }
 
-    Logger.instance = instance
+    LogWriter.instance = instance
     return instance
   }
 
@@ -299,7 +274,7 @@ export class Logger {
    * Clears the singleton instance. Use this if you need to re-initialise the global logger singleton.
    */
   static clearInstance() {
-    Logger.instance = undefined
+    LogWriter.instance = undefined
   }
 
   constructor(config: LoggerConstructor) {
@@ -320,7 +295,7 @@ export class Logger {
     return this.writers
   }
 
-  onGraphChange(entry: LogEntry) {
+  log(entry: LogEntry) {
     if (this.storeEntries) {
       this.children.push(entry)
     }
@@ -356,7 +331,7 @@ export class Logger {
     if (!this.storeEntries) {
       throw new InternalError(`Cannot get entries when storeEntries=false`, {})
     }
-    return this.children.filter((entry) => !entry.fromStdStream)
+    return this.children
   }
 
   filterBySection(section: string): LogEntry[] {
@@ -385,12 +360,12 @@ export class Logger {
 /**
  * Dummy Logger instance, just swallows log entries and prints nothing.
  */
-export class VoidLogger extends Logger {
+export class VoidLogger extends LogWriter {
   constructor() {
     super({ writers: [], level: LogLevel.error, storeEntries: false })
   }
 }
 
 export function getLogger() {
-  return Logger.getInstance()
+  return LogWriter.getInstance()
 }

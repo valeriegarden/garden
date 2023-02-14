@@ -25,7 +25,7 @@ import { CommandParams, ProcessCommandResult } from "../src/commands/base"
 import { SuiteFunction, TestFunction } from "mocha"
 import { AnalyticsGlobalConfig } from "../src/config-store/global"
 import { EventLogEntry, TestGarden, TestGardenOpts } from "../src/util/testing"
-import { Logger, LogLevel } from "../src/logger/logger"
+import { LogWriter, LogLevel } from "../src/logger/logger"
 import { GardenCli } from "../src/cli/cli"
 import { profileAsync } from "../src/util/profiling"
 import { defaultDotIgnoreFile, makeTempDir } from "../src/util/fs"
@@ -735,7 +735,7 @@ export function getRuntimeStatusEvents(eventLog: EventLogEntry[]) {
 export function initTestLogger() {
   // make sure logger is initialized
   try {
-    Logger.initialize({
+    LogWriter.initialize({
       level: LogLevel.info,
       storeEntries: true,
       type: "quiet",

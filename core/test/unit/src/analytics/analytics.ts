@@ -16,7 +16,7 @@ import { AnalyticsHandler, getAnonymousUserId } from "../../../../src/analytics/
 import { DEFAULT_API_VERSION, gardenEnv } from "../../../../src/constants"
 import { CloudApi } from "../../../../src/cloud/api"
 import { Log } from "../../../../src/logger/log-entry"
-import { Logger, LogLevel } from "../../../../src/logger/logger"
+import { LogWriter, LogLevel } from "../../../../src/logger/logger"
 import { AnalyticsGlobalConfig, GlobalConfigStore } from "../../../../src/config-store/global"
 import { ProjectResource } from "../../../../src/config/project"
 
@@ -261,7 +261,7 @@ describe("AnalyticsHandler", () => {
 
   describe("factory (user is logged in)", async () => {
     beforeEach(async () => {
-      const logger = new Logger({
+      const logger = new LogWriter({
         level: LogLevel.info,
         writers: [],
         storeEntries: false,

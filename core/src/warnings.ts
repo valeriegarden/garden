@@ -6,12 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { getLogger, Logger } from "./logger/logger"
+import { getLogger, LogWriter } from "./logger/logger"
 import chalk from "chalk"
 
 interface LoggerContext {
   readonly history: Set<string>
-  logger: Logger | undefined
+  logger: LogWriter | undefined
 }
 
 const loggerContext: LoggerContext = {

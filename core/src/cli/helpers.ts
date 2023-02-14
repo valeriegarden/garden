@@ -15,7 +15,7 @@ import { platform, release } from "os"
 import qs from "qs"
 import stringWidth from "string-width"
 import { maxBy, zip } from "lodash"
-import { Logger } from "../logger/logger"
+import { LogWriter } from "../logger/logger"
 
 import { ParameterValues, Parameter, Parameters } from "./params"
 import { GardenBaseError, InternalError, ParameterError, toGardenError } from "../exceptions"
@@ -467,7 +467,7 @@ function renderParameters(params: Parameters, formatName: (name: string, param: 
 }
 
 // TODO @eysi: We shouldn't pass the logger and logEntry here
-export function renderCommandErrors(logger: Logger, errors: Error[], logEntry?: Log) {
+export function renderCommandErrors(logger: LogWriter, errors: Error[], logEntry?: Log) {
   const gardenErrors: GardenBaseError[] = errors.map(toGardenError)
 
   const log = logEntry || logger.placeholder()

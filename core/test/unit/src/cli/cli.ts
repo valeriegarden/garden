@@ -29,7 +29,7 @@ import { UtilCommand } from "../../../../src/commands/util/util"
 import { StringParameter } from "../../../../src/cli/params"
 import stripAnsi from "strip-ansi"
 import { ToolsCommand } from "../../../../src/commands/tools"
-import { Logger, getLogger } from "../../../../src/logger/logger"
+import { LogWriter, getLogger } from "../../../../src/logger/logger"
 import { safeLoad } from "js-yaml"
 import { startServer, GardenServer } from "../../../../src/server/server"
 import { BasicTerminalWriter } from "../../../../src/logger/writers/basic-terminal-writer"
@@ -219,12 +219,12 @@ describe("cli", () => {
       // that it's initialised correctly in this block.
       beforeEach(() => {
         delete process.env.GARDEN_LOGGER_TYPE
-        Logger.clearInstance()
+        LogWriter.clearInstance()
       })
       // Re-initialise the test logger
       after(() => {
         process.env.GARDEN_LOGGER_TYPE = envLoggerType
-        Logger.clearInstance()
+        LogWriter.clearInstance()
         initTestLogger()
       })
 

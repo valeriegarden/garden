@@ -23,7 +23,7 @@ import {
 import { Command, CommandResult, CommandGroup, BuiltinArgs } from "../commands/base"
 import { PluginError, toGardenError, GardenBaseError } from "../exceptions"
 import { Garden, GardenOpts, DummyGarden } from "../garden"
-import { getLogger, Logger, LoggerType, LogLevel, parseLogLevel } from "../logger/logger"
+import { getLogger, LogWriter, LoggerType, LogLevel, parseLogLevel } from "../logger/logger"
 import { FileWriter, FileWriterConfig } from "../logger/writers/file-writer"
 
 import {
@@ -66,7 +66,6 @@ import { renderDivider } from "../logger/util"
 import { emoji as nodeEmoji } from "node-emoji"
 import { GardenProcess, GlobalConfigStore } from "../config-store/global"
 import { registerProcess } from "../process"
-import { GardenServer } from "../server/server"
 import { ServeCommand } from "../commands/serve"
 
 export async function makeDummyGarden(root: string, gardenOpts: GardenOpts) {
@@ -158,7 +157,7 @@ ${renderCommands(commands)}
     gardenDirPath,
     commandFullName,
   }: {
-    logger: Logger
+    logger: LogWriter
     log: Log
     gardenDirPath: string
     commandFullName: string
@@ -265,9 +264,9 @@ ${renderCommands(commands)}
       loggerType = "quiet"
     }
 
-    const logger = Logger.initialize({
+    const logger = LogWriter.initialize({
       level,
-      storeEntries: loggerType === "fancy",
+      storeEntries: false,
       type: loggerType,
       useEmoji: emoji,
       showTimestamps,
@@ -276,6 +275,7 @@ ${renderCommands(commands)}
     // Currently we initialise empty placeholder entries and pass those to the
     // framework as opposed to the logger itself. This is to give better control over where on
     // the screen the logs are printed.
+    // TODO @eysi: Remove header and footer logs. Not needed any more.
     const headerLog = logger.placeholder()
     const log = logger.placeholder()
     const footerLog = logger.placeholder()
@@ -546,7 +546,7 @@ ${renderCommands(commands)}
   }): Promise<RunOutput> {
     let argv = parseCliArgs({ stringArgs: args, cli: true })
 
-    let logger: Logger
+    let logger: LogWriter
     const errors: (GardenBaseError | Error)[] = []
 
     // Note: Circumvents an issue where the process exits before the output is fully flushed.
@@ -684,7 +684,7 @@ ${renderCommands(commands)}
     try {
       logger = getLogger()
     } catch (_) {
-      logger = Logger.initialize({
+      logger = LogWriter.initialize({
         level: LogLevel.info,
         type: "basic",
         storeEntries: false,

@@ -24,7 +24,6 @@ import { capitalize } from "lodash"
 import { userPrompt } from "../util/util"
 import { renderOptions, renderCommands, renderArguments, getCliStyles } from "../cli/helpers"
 import { GlobalOptions, ParameterValues, Parameters } from "../cli/params"
-import { GardenServer } from "../server/server"
 import { GardenCli } from "../cli/cli"
 import { CommandLine } from "../cli/command-line"
 
@@ -185,7 +184,7 @@ export abstract class Command<A extends Parameters = {}, O extends Parameters = 
   }
 
   getLoggerType(_: CommandParamsBase<A, O>): LoggerType {
-    return "fancy"
+    return "basic"
   }
 
   describe() {

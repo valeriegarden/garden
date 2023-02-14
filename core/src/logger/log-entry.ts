@@ -10,11 +10,11 @@ import logSymbols from "log-symbols"
 import nodeEmoji from "node-emoji"
 import { cloneDeep, round } from "lodash"
 
-import { LogLevel, logLevelMap, LogNode } from "./logger"
+import { LogLevel, logLevelMap } from "./logger"
 import { Omit } from "../util/util"
 import { findParentEntry, getAllSections } from "./util"
 import { GardenError } from "../exceptions"
-import { CreateLogEntryParams, Logger, PlaceholderOpts } from "./logger"
+import { CreateLogEntryParams, LogWriter, PlaceholderOpts } from "./logger"
 import uniqid from "uniqid"
 import { ActionKind } from "../plugin/action-types"
 
@@ -77,13 +77,12 @@ export interface LogEntryParams extends UpdateLogEntryParams {
   error?: GardenError
   indent?: number
   childEntriesInheritLevel?: boolean
-  fromStdStream?: boolean
   id?: string
 }
 
 export interface LogEntryConstructor extends LogEntryParams {
   level: LogLevel
-  root: Logger
+  root: LogWriter
   parent?: Log
 }
 
@@ -133,10 +132,10 @@ interface LogEntryBase {
   // TODO @eysi: Skip?
   indent?: number
   // TODO @eysi: Skip?
-  fromStdStream?: boolean
   errorData?: GardenError
   id?: string
-  root: Logger
+  root: LogWriter
+  parent: Log
 }
 
 // TODO @eysi: Rename to LogEntry
@@ -156,16 +155,14 @@ interface PluginLogEntry extends LogEntryBase {
 }
 
 // TODO @eysi: Rename to Log
-export class Log implements LogNode {
-  private messages: LogEntryMessage[]
+export class Log {
   private metadata?: LogEntryMetadata
   public readonly parent?: Log
   public readonly timestamp: Date
   public readonly key: string
   public readonly level: LogLevel
-  public readonly root: Logger
+  public readonly root: LogWriter
   public readonly section?: string
-  public readonly fromStdStream?: boolean
   public readonly indent?: number
   public readonly errorData?: GardenError
   public readonly childEntriesInheritLevel?: boolean
@@ -182,16 +179,14 @@ export class Log implements LogNode {
     this.parent = params.parent
     this.id = params.id
     this.root = params.root
-    this.fromStdStream = params.fromStdStream
     this.indent = params.indent
     this.errorData = params.error
     this.childEntriesInheritLevel = params.childEntriesInheritLevel
     this.metadata = params.metadata
     this.id = params.id
     this.revision = -1
+    // Require section?
     this.section = params.section
-
-    this.messages = [{ timestamp: new Date() }]
   }
 
   private createLogEntry(params: CreateLogEntryParams) {
@@ -217,19 +212,11 @@ export class Log implements LogNode {
       metadata,
       // TODO @eysi: Do we need this?
       key: uniqid(),
-      // TODO @eysi: Use root config as opposed to referencing a class instance?
       root: this.root,
+      parent: this,
     }
 
     return logEntry
-    // return new LogEntry({
-    //   ...params,
-    //   indent,
-    //   level,
-    //   metadata,
-    //   root: this.root,
-    //   parent: this,
-    // })
   }
 
   private log(params: CreateLogEntryParams): void {
@@ -237,7 +224,7 @@ export class Log implements LogNode {
     if (this.root.storeEntries) {
       this.children.push(entry)
     }
-    this.root.onGraphChange(entry)
+    this.root.log(entry)
   }
 
   /**
@@ -250,7 +237,6 @@ export class Log implements LogNode {
       level: params.level || this.level,
       parent: this,
       root: this.root,
-      fromStdStream:  params.fromStdStream || this.fromStdStream,
       error: this.errorData || params.error,
       childEntriesInheritLevel: params.childEntriesInheritLevel || this.childEntriesInheritLevel,
       metadata:  params.metadata || this.metadata,
@@ -267,7 +253,6 @@ export class Log implements LogNode {
       level: params.level || this.level,
       parent: this,
       root: this.root,
-      fromStdStream:  params.fromStdStream || this.fromStdStream,
       error: this.errorData || params.error,
       childEntriesInheritLevel: params.childEntriesInheritLevel || this.childEntriesInheritLevel,
       metadata:  params.metadata || this.metadata,
@@ -306,23 +291,9 @@ export class Log implements LogNode {
     return this.metadata
   }
 
-  getMessages() {
-    return this.messages
-  }
-
-  /**
-   * Returns a deep copy of the latest message, if availble.
-   * Otherwise returns an empty object of type LogEntryMessage for convenience.
-   */
+  // TODO @eysi: Rename to "getLatestEntry"
   getLatestMessage() {
-    if (!this.messages) {
-      return <LogEntryMessage>{}
-    }
-
-    // Use spread operator to clone the array
-    const message = [...this.messages][this.messages.length - 1]
-    // ...and the object itself
-    return { ...message }
+    return this.children.slice(-1)[0]
   }
 
   placeholder({
@@ -386,14 +357,6 @@ export class Log implements LogNode {
    */
   getStringLevel(): string {
     return logLevelMap[this.level]
-  }
-
-  /**
-   * Get the full list of sections including all parent entries.
-   */
-  getAllSections(): string[] {
-    const msg = this.getLatestMessage()
-    return msg ? getAllSections(this, msg) : []
   }
 
   /**

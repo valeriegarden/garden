@@ -8,7 +8,7 @@
 
 import { generateDocs } from "@garden-io/core/build/src/docs/generate"
 import { resolve } from "path"
-import { Logger, LogLevel } from "@garden-io/core/build/src/logger/logger"
+import { LogWriter, LogLevel } from "@garden-io/core/build/src/logger/logger"
 import { GARDEN_CLI_ROOT } from "@garden-io/core/build/src/constants"
 import { getBundledPlugins } from "./cli"
 import { getSupportedPlugins } from "@garden-io/core/build/src/plugins/plugins"
@@ -17,7 +17,7 @@ require("source-map-support").install()
 
 // make sure logger is initialized
 try {
-  Logger.initialize({
+  LogWriter.initialize({
     level: LogLevel.info,
     type: "quiet",
     storeEntries: false,

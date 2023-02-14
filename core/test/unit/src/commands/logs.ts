@@ -23,7 +23,7 @@ import {
 import { DEFAULT_API_VERSION } from "../../../../src/constants"
 import { formatForTerminal } from "../../../../src/logger/renderers"
 import chalk from "chalk"
-import { Log, LogEntry } from "../../../../src/logger/log-entry"
+import { LogEntry } from "../../../../src/logger/log-entry"
 import { LogLevel } from "../../../../src/logger/logger"
 import { DeployLogEntry } from "../../../../src/types/service"
 import { execDeployActionSchema } from "../../../../src/plugins/exec/config"
@@ -85,7 +85,7 @@ function getLogOutput(garden: TestGarden, msg: string, extraFilter: (e: LogEntry
     .getChildEntries()
     .filter(extraFilter)
     .filter((e) => e.msg?.includes(msg))!
-  return entries.map((e) => formatForTerminal(e, "basic").trim())
+  return entries.map((e) => formatForTerminal(e).trim())
 }
 
 describe("LogsCommand", () => {

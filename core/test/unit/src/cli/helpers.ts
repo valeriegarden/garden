@@ -310,7 +310,7 @@ describe("processCliArgs", () => {
     const cmd = new BuildCommand()
     expectError(() => parseAndProcess(["--logger-type=foo"], cmd), {
       contains:
-        'Invalid value for option --logger-type: "foo" is not a valid argument (should be any of "quiet", "basic", "fancy", "json")',
+        'Invalid value for option --logger-type: "foo" is not a valid argument (should be any of "quiet", "basic", "json")',
     })
   })
 

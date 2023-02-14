@@ -27,7 +27,7 @@ import {
   Exec,
   V1Deployment,
   V1Service,
-  Log,
+  Log as K8sLog,
   NetworkingV1Api,
   ApiextensionsV1Api,
 } from "@kubernetes/client-node"
@@ -821,7 +821,7 @@ export class KubeApi {
   }
 
   getLogger() {
-    return new Log(this.config)
+    return new K8sLog(this.config)
   }
 
   /**

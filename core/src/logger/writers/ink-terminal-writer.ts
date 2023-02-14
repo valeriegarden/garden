@@ -8,7 +8,7 @@
 
 import { basicRender } from "../renderers"
 import { LogEntry } from "../log-entry"
-import { Logger } from "../logger"
+import { LogWriter } from "../logger"
 import { BaseWriterParams, Writer } from "./base"
 
 type WriteCallback = (data: string) => void
@@ -29,7 +29,7 @@ export class InkTerminalWriter extends Writer {
     this.writeCallback = cb
   }
 
-  onGraphChange(entry: LogEntry, logger: Logger) {
+  onGraphChange(entry: LogEntry, logger: LogWriter) {
     const out = basicRender(entry, logger)
     if (out) {
       this.writeCallback(out)

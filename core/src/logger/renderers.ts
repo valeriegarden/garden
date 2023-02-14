@@ -15,9 +15,9 @@ import hasAnsi = require("has-ansi")
 
 import { LogEntryMessage, LogEntry, LogSymbol } from "./log-entry"
 import { JsonLogEntry } from "./writers/json-terminal-writer"
-import { highlightYaml, PickFromUnion, safeDumpYaml } from "../util/util"
-import { printEmoji, getAllSections, findSection } from "./util"
-import { LoggerType, Logger, logLevelMap, LogLevel, formatGardenErrorWithDetail } from "./logger"
+import { highlightYaml, safeDumpYaml } from "../util/util"
+import { printEmoji } from "./util"
+import { LogWriter, logLevelMap, LogLevel, formatGardenErrorWithDetail } from "./logger"
 
 type RenderFn = (entry: LogEntry) => string
 
@@ -88,8 +88,6 @@ export function renderError(entry: LogEntry): string {
 }
 
 export function renderSymbolBasic(entry: LogEntry): string {
-  // let { symbol } = entry.getLatestMessage()
-  // const section = findSection(entry)
   let symbol = entry.symbol
 
   if (symbol === "empty") {
@@ -104,13 +102,6 @@ export function renderSymbolBasic(entry: LogEntry): string {
   return symbol ? `${logSymbols[symbol]} ` : ""
 }
 
-export function renderSymbol(entry: LogEntry): string {
-  if (entry.symbol === "empty") {
-    return "  "
-  }
-  return entry.symbol ? `${logSymbols[entry.symbol]} ` : ""
-}
-
 export function renderTimestamp(entry: LogEntry): string {
   if (!entry.root.showTimestamps) {
     return ""
@@ -123,14 +114,10 @@ export function getTimestamp(entry: LogEntry): string {
 }
 
 export function renderMsg(entry: LogEntry): string {
-  const { fromStdStream, status, msg } = entry
+  const { status, msg } = entry
 
   if (!msg) {
     return ""
-  }
-
-  if (fromStdStream) {
-    return msg
   }
 
   const styleFn = status === "error" ? errorStyle : msgStyle
@@ -183,21 +170,10 @@ export function renderSectionBasic(entry: LogEntry): string {
   return ""
 }
 
-export function renderSection(entry: LogEntry): string {
-  const style = chalk.cyan.italic
-  const { msg, section } = entry
-  if (section && msg) {
-    return `${style(padSection(section))} → `
-  } else if (section) {
-    return style(padSection(section))
-  }
-  return ""
-}
-
 /**
- * Formats entries for both fancy writer and basic terminal writer.
+ * Formats entries for both the basic terminal writer.
  */
-export function formatForTerminal(entry: LogEntry, type: PickFromUnion<LoggerType, "fancy" | "basic">): string {
+export function formatForTerminal(entry: LogEntry): string {
   const { msg: msg, emoji, section, symbol, data } = entry
   const empty = [msg, section, emoji, symbol, data].every((val) => val === undefined)
 
@@ -205,19 +181,15 @@ export function formatForTerminal(entry: LogEntry, type: PickFromUnion<LoggerTyp
     return ""
   }
 
-  if (type === "basic") {
-    return combineRenders(entry, [
-      renderTimestamp,
-      renderSymbolBasic,
-      renderSectionBasic,
-      renderEmoji,
-      renderMsg,
-      renderData,
-      () => "\n",
-    ])
-  }
-
-  return combineRenders(entry, [leftPad, renderSymbol, renderSection, renderEmoji, renderMsg, renderData, () => "\n"])
+  return combineRenders(entry, [
+    renderTimestamp,
+    renderSymbolBasic,
+    renderSectionBasic,
+    renderEmoji,
+    renderMsg,
+    renderData,
+    () => "\n",
+  ])
 }
 
 export function cleanForJSON(input?: string | string[]): string {
@@ -233,9 +205,9 @@ export function cleanWhitespace(str: string) {
   return str.replace(/\s+/g, " ")
 }
 
-export function basicRender(entry: LogEntry, logger: Logger): string | null {
+export function basicRender(entry: LogEntry, logger: LogWriter): string | null {
   if (logger.level >= entry.level) {
-    return formatForTerminal(entry, "basic")
+    return formatForTerminal(entry)
   }
   return null
 }
