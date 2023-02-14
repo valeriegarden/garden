@@ -99,7 +99,7 @@ export async function getSystemServiceStatus({ sysGarden, log, names }: GetSyste
   const graph = await sysGarden.getConfigGraph({ log, emit: false })
 
   const serviceStatuses = await actions.getDeployStatuses({
-    log: log.placeholder({ level: LogLevel.verbose, fixLevel: true }),
+    log: log.makeNewLogContext({ level: LogLevel.verbose, fixLevel: true }),
     graph,
     names,
   })

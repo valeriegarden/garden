@@ -291,7 +291,7 @@ export async function ensureUtilDeployment({
   namespace: string
 }) {
   return deployLock.acquire(namespace, async () => {
-    const deployLog = log.placeholder()
+    const deployLog = log.makeNewLogContext({})
 
     const { authSecret, updated: secretUpdated } = await ensureBuilderSecret({
       provider,

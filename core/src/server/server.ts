@@ -114,7 +114,7 @@ export class GardenServer extends EventEmitter {
   constructor({ log, command, port }: GardenServerParams) {
     super()
     this.log = log
-    this.debugLog = this.log.placeholder({ level: LogLevel.debug, fixLevel: true })
+    this.debugLog = this.log.makeNewLogContext({ level: LogLevel.debug, fixLevel: true })
     this.commands = prepareCommands(getBuiltinCommands()) // This gets updated when .setGarden() is called
     this.serveCommand = command
     this.clientRouter = undefined
@@ -163,7 +163,7 @@ export class GardenServer extends EventEmitter {
     })
 
     this.log.info("")
-    this.statusLog = this.log.placeholder()
+    this.statusLog = this.log.makeNewLogContext({})
   }
 
   getBaseUrl() {

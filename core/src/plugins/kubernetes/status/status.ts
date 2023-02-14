@@ -185,7 +185,7 @@ export async function waitForResources({
 
   const logEventContext = {
     origin: "kubernetes-plugin",
-    log: log.placeholder({ level: LogLevel.verbose }),
+    log: log.makeNewLogContext({ level: LogLevel.verbose }),
   }
 
   const emitLog = (msg: string) =>

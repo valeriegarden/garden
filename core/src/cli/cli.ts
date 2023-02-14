@@ -359,7 +359,7 @@ ${renderCommands(commands)}
     // Print header log before we know the namespace to prevent content from
     // jumping.
     // TODO: Link to Cloud namespace page here.
-    const nsLog = headerLog.placeholder()
+    const nsLog = headerLog.makeNewLogContext({})
 
     do {
       try {

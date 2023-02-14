@@ -28,7 +28,7 @@ export class DeployTask extends ExecuteActionTask<DeployAction, DeployStatus> {
   }
 
   async getStatus({ dependencyResults }: ActionTaskStatusParams<DeployAction>) {
-    const log = this.log.placeholder()
+    const log = this.log.makeNewLogContext({})
     const action = this.getResolvedAction(this.action, dependencyResults)
 
     const devMode = includes(this.devModeDeployNames, action.name)

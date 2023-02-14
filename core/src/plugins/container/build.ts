@@ -66,7 +66,7 @@ export const buildContainer: BuildActionHandler<"build", ContainerBuildAction> =
 
   const logEventContext = {
     origin: "docker build",
-    log: log.placeholder({ level: LogLevel.verbose }),
+    log: log.makeNewLogContext({ level: LogLevel.verbose }),
   }
 
   const outputStream = split2()

@@ -153,7 +153,7 @@ export class CliWrapper {
 
     const logEventContext = {
       origin: this.name,
-      log: log.placeholder({ level: LogLevel.verbose }),
+      log: log.makeNewLogContext({ level: LogLevel.verbose }),
     }
 
     logStream.on("data", (line: Buffer) => {

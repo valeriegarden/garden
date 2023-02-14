@@ -117,7 +117,7 @@ export const kanikoBuild: BuildHandler = async (params) => {
     // Make sure the Kaniko Pod namespace has the auth secret ready
     const secretRes = await ensureBuilderSecret({
       provider,
-      log: log.placeholder(),
+      log: log.makeNewLogContext({}),
       api,
       namespace: kanikoNamespace,
     })
@@ -374,7 +374,7 @@ async function runKaniko({
 
   const logEventContext = {
     origin: "kaniko",
-    log: log.placeholder({ level: LogLevel.verbose }),
+    log: log.makeNewLogContext({ level: LogLevel.verbose }),
   }
 
   const runner = new PodRunner({

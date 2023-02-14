@@ -108,7 +108,6 @@ interface LogEntryBase {
   parent: Log
 }
 
-// TODO @eysi: Rename to LogEntry
 export interface LogEntry extends LogEntryBase {
   type: "logEntry"
 }
@@ -153,6 +152,7 @@ export class Log {
     // of the parent entry that set the flag.
     const parentWithPreserveFlag = findParentEntry(this, (log) => !!log.fixLevel)
     const level = parentWithPreserveFlag ? Math.max(parentWithPreserveFlag.level, params.level) : params.level
+    const section = params.section || this.section
 
     let metadata: LogEntryMetadata | undefined = undefined
     if (this.metadata || params.metadata) {
@@ -161,7 +161,7 @@ export class Log {
 
     const logEntry: LogEntry = {
       type: "logEntry",
-      section: this.section,
+      section,
       ...params,
       level,
       timestamp: new Date().toISOString(),
