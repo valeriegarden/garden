@@ -101,7 +101,7 @@ export const buildkitBuildHandler: BuildHandler = async (params) => {
     deploymentName: buildkitDeploymentName,
   })
 
-  log.setState(`Building image ${localId}...`)
+  log.info(`Building image ${localId}...`)
 
   const logEventContext = {
     origin: "buildkit",
@@ -210,7 +210,7 @@ export async function ensureBuildkit({
     }
 
     // Deploy the buildkit daemon
-    deployLog.setState(
+    deployLog.info(
       chalk.gray(`-> Deploying ${buildkitDeploymentName} daemon in ${namespace} namespace (was ${status.state})`)
     )
 
@@ -226,7 +226,7 @@ export async function ensureBuildkit({
       timeoutSec: 600,
     })
 
-    deployLog.setState({ append: true, msg: "Done!" })
+    deployLog.info({ append: true, msg: "Done!" })
 
     return { authSecret, updated: true }
   })

@@ -175,7 +175,7 @@ export class GardenServer extends EventEmitter {
   }
 
   showUrl(url?: string) {
-    this.statusLog.setState({
+    this.statusLog.info({
       emoji: "sunflower",
       msg: chalk.cyan("Garden server running at ") + chalk.blueBright(url || this.getUrl()),
     })

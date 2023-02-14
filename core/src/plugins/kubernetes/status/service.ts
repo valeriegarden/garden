@@ -64,7 +64,7 @@ export async function waitForServiceEndpoints(
         })
       }
 
-      log.setState({ symbol: "warning", msg: `Waiting for Service '${serviceName}' Endpoints to resolve...` })
+      log.info({ symbol: "warning", msg: `Waiting for Service '${serviceName}' Endpoints to resolve...` })
       await sleep(1000)
     }
   })

@@ -204,7 +204,7 @@ export async function resolveAction<T extends Action>({
   action: T
   log: LogEntry
 }): Promise<Resolved<T>> {
-  const status = log.info({ msg: `Resolving ${action.longDescription()}`, status: "active" })
+  log.info(`Resolving ${action.longDescription()}`)
 
   const task = new ResolveActionTask({
     garden,
@@ -218,7 +218,7 @@ export async function resolveAction<T extends Action>({
 
   const results = await garden.processTasks({ tasks: [task], log, throwOnError: true })
 
-  status.setState({ status: "done" })
+  log.info(`Done!`)
 
   return <Resolved<T>>(<unknown>results.results.getResult(task)!.result!.outputs.resolvedAction)
 }

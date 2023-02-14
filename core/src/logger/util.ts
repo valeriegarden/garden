@@ -8,12 +8,13 @@
 
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
-import { LogLevel } from "./logger"
+import { formatGardenErrorWithDetail, LogLevel } from "./logger"
 import { Logger } from "./logger"
 import { LogEntry, LogEntryParams, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
 import dedent from "dedent"
 import stringWidth from "string-width"
+import { GardenError } from "../exceptions"
 
 // Add platforms/terminals?
 export function envSupportsEmoji() {
@@ -228,9 +229,9 @@ export function printEmoji(emoji: EmojiName, log: LogEntry) {
   return ""
 }
 
-export function printHeader(log: LogEntry, command: string, emoji: EmojiName): LogEntry {
+export function printHeader(log: LogEntry, command: string, emoji: EmojiName): void {
   log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji, log))
-  return log.info("") // Print new line after header
+  log.info("") // Print new line after header
 }
 
 export function printFooter(log: LogEntry) {
@@ -241,6 +242,17 @@ export function printFooter(log: LogEntry) {
 export function printWarningMessage(log: LogEntry, text: string) {
   return log.info({ emoji: "warning", msg: chalk.bold.yellow(text) })
 }
+
+
+// TODO @eysi: This function doesn't really make sense as is.
+export function formatError({ msg, error }: { msg: string, error?: GardenError }) {
+  if (error) {
+    return formatGardenErrorWithDetail(error)
+  }
+
+  return msg
+}
+
 
 interface DividerOpts {
   width?: number

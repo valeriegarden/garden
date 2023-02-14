@@ -31,7 +31,7 @@ export const deployRouter = (baseParams: BaseRouterParams) =>
 
       params.events.on("log", ({ timestamp, data, origin, log }) => {
         // stream logs to CLI
-        log.setState(renderOutputStream(data.toString(), origin))
+        log.info(renderOutputStream(data.toString(), origin))
         // stream logs to Garden Cloud
         // TODO: consider sending origin as well
         garden.events.emit("log", {
@@ -87,10 +87,9 @@ export const deployRouter = (baseParams: BaseRouterParams) =>
     delete: async (params) => {
       const { action, router, handlers } = params
 
-      const log = params.log.info({
+      const log = params.log.makeNewLogContextWithMessage({
         section: action.key(),
         msg: "Deleting...",
-        status: "active",
       })
 
       const status = await handlers.getStatus({ ...params, devMode: false, localMode: false })

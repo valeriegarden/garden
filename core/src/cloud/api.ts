@@ -27,11 +27,12 @@ import { CommandInfo } from "../plugin-context"
 import { ProjectResource } from "../config/project"
 import { ClientAuthToken, GlobalConfigStore } from "../config-store/global"
 import { add } from "date-fns"
+import { LogLevel } from "../logger/logger"
 
 const gardenClientName = "garden-core"
 const gardenClientVersion = getPackageVersion()
 
-export class EnterpriseApiDuplicateProjectsError extends EnterpriseApiError {}
+export class EnterpriseApiDuplicateProjectsError extends EnterpriseApiError { }
 
 // If a GARDEN_AUTH_TOKEN is present and Garden is NOT running from a workflow runner pod,
 // switch to ci-token authentication method.
@@ -170,7 +171,7 @@ export class CloudApi {
   public namespaceId?: number
   public sessionRegistered = false
 
-  constructor(private log: LogEntry, public domain: string, private globalConfigStore: GlobalConfigStore) {}
+  constructor(private log: LogEntry, public domain: string, private globalConfigStore: GlobalConfigStore) { }
 
   /**
    * Initialize the Cloud API.
@@ -206,7 +207,7 @@ export class CloudApi {
     const distroName = getCloudDistributionName(api.domain)
     const section = distroName === "Garden Enterprise" ? "garden-enterprise" : "garden-cloud"
 
-    const enterpriseLog = skipLogging ? null : log.info({ section, msg: "Authorizing...", status: "active" })
+    const enterpriseLog = skipLogging ? null : log.makeNewLogContextWithMessage({ section, msg: "Authorizing..." })
 
     if (gardenEnv.GARDEN_AUTH_TOKEN) {
       // Throw if using an invalid "CI" access token
@@ -464,8 +465,7 @@ export class CloudApi {
       this.log.debug({ msg: `Failed to refresh the token.` })
       const detail = is401Error(err) ? { statusCode: err.response.statusCode } : {}
       throw new EnterpriseApiError(
-        `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${
-          err.message
+        `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${err.message
         }`,
         detail
       )
@@ -521,9 +521,9 @@ export class CloudApi {
               // Intentionally skipping search params in case they contain tokens or sensitive data.
               const href = options.url.origin + options.url.pathname
               const description = retryDescription || `Request`
-              retryLog = retryLog || this.log.debug("")
+              retryLog = retryLog || this.log.makeNewLogContext({ level: LogLevel.debug })
               const statusCodeDescription = error.code ? ` (status code ${error.code})` : ``
-              retryLog.setState(deline`
+              retryLog.info(deline`
                 ${description} failed with error ${error.message}${statusCodeDescription},
                 retrying (${retryCount}/${retryLimit}) (url=${href})
               `)
@@ -688,8 +688,7 @@ export class CloudApi {
     } catch (err) {
       if (!is401Error(err)) {
         throw new EnterpriseApiError(
-          `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${
-            err.message
+          `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${err.message
           }`,
           {}
         )

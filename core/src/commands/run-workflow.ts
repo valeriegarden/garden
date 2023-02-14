@@ -115,10 +115,12 @@ export class RunWorkflowCommand extends Command<Args, {}> {
       const stepHeaderLog = outerLog.placeholder({ indent: 1, metadata })
       const stepBodyLog = outerLog.placeholder({ indent: 1, metadata })
       const stepFooterLog = outerLog.placeholder({ indent: 1, metadata })
-      garden.log.setState({ metadata })
+      // TODO @eysi ()
+      // garden.log.setState({ metadata })
+      garden.log.info({ metadata })
 
       if (step.skip) {
-        stepBodyLog.setState(chalk.yellow(`Skipping step ${chalk.white(index + 1)}/${chalk.white(steps.length)}`))
+        stepBodyLog.info(chalk.yellow(`Skipping step ${chalk.white(index + 1)}/${chalk.white(steps.length)}`))
         result.steps[stepName] = {
           number: index + 1,
           outputs: {},

@@ -34,7 +34,7 @@ describe("JsonTerminalWriter", () => {
       const now = freezeTime()
       const writer = new JsonTerminalWriter()
       const entry = logger.info("hello logger")
-      entry.setState({ msg: "hello again", append: true })
+      entry.info({ msg: "hello again", append: true })
       const out = writer.render(entry, logger)
       expect(out).to.eql(
         `{"msg":"hello logger - hello again","section":"","timestamp":"${now.toISOString()}","level":"info","allSections":[]}`

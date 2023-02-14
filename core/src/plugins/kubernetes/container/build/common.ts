@@ -151,7 +151,7 @@ export async function syncToBuildSync(params: SyncToSharedBuildSyncParams) {
     log.debug(`Sync connection terminated`)
   }
 
-  log.setState("File sync to cluster complete")
+  log.info("File sync to cluster complete")
 
   return { contextRelPath, contextPath, dataPath }
 }
@@ -321,7 +321,7 @@ export async function ensureUtilDeployment({
     }
 
     // Deploy the service
-    deployLog.setState(
+    deployLog.info(
       chalk.gray(`-> Deploying ${utilDeploymentName} service in ${namespace} namespace (was ${status.state})`)
     )
 
@@ -338,7 +338,7 @@ export async function ensureUtilDeployment({
       timeoutSec: 600,
     })
 
-    deployLog.setState({ append: true, msg: "Done!" })
+    deployLog.info({ append: true, msg: "Done!" })
 
     return { authSecret, updated: true }
   })
@@ -383,7 +383,7 @@ export async function ensureBuilderSecret({
   const existingSecret = await api.readOrNull({ log, namespace, manifest: authSecret })
 
   if (!existingSecret || authSecret.data?.[dockerAuthSecretKey] !== existingSecret.data?.[dockerAuthSecretKey]) {
-    log.setState(chalk.gray(`-> Updating Docker auth secret in namespace ${namespace}`))
+    log.info(chalk.gray(`-> Updating Docker auth secret in namespace ${namespace}`))
     await api.upsert({ kind: "Secret", namespace, log, obj: authSecret })
     updated = true
   }

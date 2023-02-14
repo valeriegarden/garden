@@ -428,10 +428,10 @@ function checkMutagen(ctx: PluginContext, log: LogEntry) {
             })
           } else {
             if (!syncStatusLines[sessionName]) {
-              syncStatusLines[sessionName] = log.info("").placeholder()
+              syncStatusLines[sessionName] = log.makeNewLogContext({})
             }
             const time = new Date().toLocaleTimeString()
-            syncStatusLines[sessionName].setState({
+            syncStatusLines[sessionName].info({
               symbol: "info",
               section,
               msg: chalk.gray(`Synchronized ${description} at ${time}`),

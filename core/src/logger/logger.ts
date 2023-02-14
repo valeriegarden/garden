@@ -187,7 +187,7 @@ export interface LoggerConstructor extends LoggerConfigBase {
   storeEntries: boolean
 }
 
-export interface CreateNodeParams extends LogEntryParams {
+export interface CreateLogEntryParams extends LogEntryParams {
   level: LogLevel
   isPlaceholder?: boolean
 }
@@ -200,15 +200,15 @@ export interface PlaceholderOpts {
 }
 
 export interface LogNode {
-  silly(params: string | LogEntryParams): LogEntry
-  debug(params: string | LogEntryParams): LogEntry
-  verbose(params: string | LogEntryParams): LogEntry
-  info(params: string | LogEntryParams): LogEntry
-  warn(params: string | LogEntryParams): LogEntry
-  error(params: string | LogEntryParams): LogEntry
+  silly(params: string | LogEntryParams): void
+  debug(params: string | LogEntryParams): void
+  verbose(params: string | LogEntryParams): void
+  info(params: string | LogEntryParams): void
+  warn(params: string | LogEntryParams): void
+  error(params: string | LogEntryParams): void
 }
 
-function resolveParams(level: LogLevel, params: string | LogEntryParams): CreateNodeParams {
+function resolveParams(level: LogLevel, params: string | LogEntryParams): CreateLogEntryParams {
   if (typeof params === "string") {
     return { msg: params, level }
   }
@@ -310,7 +310,7 @@ export class Logger implements LogNode {
     this.storeEntries = config.storeEntries
   }
 
-  private addNode(params: CreateNodeParams): LogEntry {
+  private addNode(params: CreateLogEntryParams): LogEntry {
     const entry = new LogEntry({ ...params, root: this })
     if (this.storeEntries) {
       this.children.push(entry)

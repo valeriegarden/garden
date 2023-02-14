@@ -57,6 +57,7 @@ import { PluginContext } from "../../plugin-context"
 import { Writable, Readable, PassThrough } from "stream"
 import { getExecExitCode } from "./status/pod"
 import { labelSelectorToString } from "./util"
+import { LogLevel } from "../../logger/logger"
 
 interface ApiGroupMap {
   [groupVersion: string]: V1APIGroup
@@ -991,10 +992,10 @@ async function requestWithRetry<R>(
       return await req()
     } catch (err) {
       if (shouldRetry(err)) {
-        retryLog = retryLog || log.debug("")
+        retryLog = retryLog || log.makeNewLogContext({ level: LogLevel.debug })
         if (usedRetries <= maxRetries) {
           const sleepMsec = minTimeoutMs + usedRetries * minTimeoutMs
-          retryLog.setState(deline`
+          retryLog.info(deline`
             ${description} failed with error ${err.message}, retrying in ${sleepMsec}ms
             (${usedRetries}/${maxRetries})
           `)
@@ -1002,7 +1003,7 @@ async function requestWithRetry<R>(
           return await retry(usedRetries + 1)
         } else {
           if (usedRetries === maxRetries) {
-            retryLog.setState(chalk.red(`Kubernetes API: Maximum retry count exceeded`))
+            retryLog.info(chalk.red(`Kubernetes API: Maximum retry count exceeded`))
           }
           throw err
         }

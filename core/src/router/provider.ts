@@ -175,16 +175,16 @@ export class ProviderRouter extends BaseRouter {
    * Runs cleanupEnvironment for all configured providers
    */
   async cleanupAll(log: LogEntry) {
-    const envLog = log.info({ msg: chalk.white("Cleaning up environments..."), status: "active" })
+    log.info(chalk.white("Cleaning up environments..."))
     const environmentStatuses: EnvironmentStatusMap = {}
 
     const providers = await this.garden.resolveProviders(log)
     await Bluebird.each(Object.values(providers), async (provider) => {
-      await this.cleanupEnvironment({ pluginName: provider.name, log: envLog, events: undefined })
+      await this.cleanupEnvironment({ pluginName: provider.name, log, events: undefined })
       environmentStatuses[provider.name] = { ready: false, outputs: {} }
     })
 
-    envLog.setSuccess()
+    log.setSuccess()
 
     return environmentStatuses
   }

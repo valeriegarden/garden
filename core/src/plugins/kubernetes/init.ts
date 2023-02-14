@@ -367,10 +367,9 @@ export async function cleanupEnvironment({ ctx, log }: CleanupEnvironmentParams)
     nsDescription = `namespaces ${namespacesToDelete[0]} and ${namespacesToDelete[1]}`
   }
 
-  const entry = log.info({
+  const entry = log.makeNewLogContextWithMessage({
     section: "kubernetes",
     msg: `Deleting ${nsDescription} (this may take a while)`,
-    status: "active",
   })
 
   await deleteNamespaces(<string[]>namespacesToDelete, api, entry)

@@ -94,7 +94,7 @@ export async function waitForResourcesWith({
   let loops = 0
   const startTime = new Date().getTime()
 
-  const statusLine = log.info({
+  const statusLine = log.makeNewLogContextWithMessage({
     symbol: "info",
     section: resourcesType,
     msg: `Waiting for resources to be ready...`,
@@ -117,7 +117,7 @@ export async function waitForResourcesWith({
     }
   }
 
-  statusLine.setState({ symbol: "info", section: resourcesType, msg: `Resources ready` })
+  statusLine.info({ symbol: "info", section: resourcesType, msg: `Resources ready` })
 }
 
 /**
@@ -216,40 +216,37 @@ export async function setupCertManager({ ctx, provider, log, status }: SetupCert
   const { systemCertManagerReady, systemManagedCertificatesReady } = status.detail
 
   if (!systemCertManagerReady || !systemManagedCertificatesReady) {
-    const entry = log.info({
-      section: "cert-manager",
-      msg: `Verifying installation...`,
-      status: "active",
-    })
+    const certsLog = log.makeNewLogContext({ section: "cert-manager" })
+    certsLog.info(`Verifying installation...`)
+    // const certsLog = log.info({
+    //   section: "cert-manager",
+    //   msg: `Verifying installation...`,
+    //   status: "active",
+    // })
 
     if (!systemCertManagerReady) {
-      entry.setState("Installing to cert-manager namespace...")
+      certsLog.info("Installing to cert-manager namespace...")
       const api = await KubeApi.factory(log, ctx, provider)
       await ensureNamespace(api, { name: "cert-manager" }, log)
       const customResourcesPath = join(STATIC_DIR, "kubernetes", "system", "cert-manager", "cert-manager-crd.yaml")
       const crd = yaml.safeLoadAll((await readFile(customResourcesPath)).toString()).filter((x) => x)
-      entry.setState("Installing Custom Resources...")
+      certsLog.info("Installing Custom Resources...")
       await apply({ log, ctx, api, provider, manifests: crd, validate: false })
 
       const waitForCertManagerPods: WaitForResourcesParams = {
         ctx,
         provider,
-        log: <LogEntry>entry,
+        log: <LogEntry>certsLog,
         resources: [],
         resourcesType: "cert-manager pods",
         predicate: checkForCertManagerPodsReady,
       }
       await waitForResourcesWith(waitForCertManagerPods)
-      entry.setState("Custom Resources installed.")
+      certsLog.info("Custom Resources installed.")
     }
 
     if (!systemManagedCertificatesReady) {
-      const certsLog = entry.info({
-        symbol: "info",
-        section: "TLS certificates",
-        msg: `Processing certificates...`,
-        status: "active",
-      })
+      certsLog.info(`Processing certificates...`)
       const api = await KubeApi.factory(log, ctx, provider)
       const issuers: any[] = []
       const certificates: any[] = []
@@ -279,12 +276,12 @@ export async function setupCertManager({ ctx, provider, log, status }: SetupCert
         })
 
       if (issuers.length > 0) {
-        certsLog.setState("Creating Issuers...")
+        certsLog.info("Creating Issuers...")
         await apply({ log, ctx, api, provider, manifests: issuers })
-        certsLog.setState("Issuers created.")
+        certsLog.info("Issuers created.")
 
         await apply({ log, ctx, api, provider, manifests: certificates, namespace })
-        certsLog.setState("Creating Certificates...")
+        certsLog.info("Creating Certificates...")
 
         const certificateNames = certificates.map((cert) => cert.metadata.name)
         const waitForCertificatesParams: WaitForResourcesParams = {
@@ -296,12 +293,12 @@ export async function setupCertManager({ ctx, provider, log, status }: SetupCert
           predicate: checkCertificateStatusByName,
         }
         await waitForResourcesWith(waitForCertificatesParams)
-        certsLog.setState('Certificates created and "Ready"')
+        certsLog.info('Certificates created and "Ready"')
       } else {
-        certsLog.setState("No certificates found...")
+        certsLog.info("No certificates found...")
       }
     }
-    entry.setSuccess({ msg: chalk.green(`Done (took ${entry.getDuration(1)} sec)`), append: true })
+    certsLog.setSuccess({ msg: chalk.green(`Done (took ${certsLog.getDuration(1)} sec)`), append: true })
   }
 }
 

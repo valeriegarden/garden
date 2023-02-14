@@ -132,7 +132,9 @@ export async function getStackStatus(params: TerraformParamsWithVariables): Prom
   await setWorkspace(params)
   await tfValidate(params)
 
-  const logEntry = log.verbose({ section: "terraform", msg: "Running plan...", status: "active" })
+  // TODO @eysi: Does this mean child log entries are also verbose?
+  const logEntry = log.makeNewLogContextWithMessage({ section: "terraform", msg: "Running plan...", status: "active" })
+  // const logEntry = log.verbose({ section: "terraform", msg: "Running plan...", status: "active" })
 
   const plan = await terraform(ctx, provider).exec({
     log,
@@ -181,7 +183,7 @@ export async function applyStack(params: TerraformParamsWithVariables) {
   const args = ["apply", "-auto-approve", "-input=false", ...(await prepareVariables(root, variables))]
   const proc = await terraform(ctx, provider).spawn({ log, args, cwd: root })
 
-  const statusLine = log.info("→ Applying Terraform stack...")
+  const statusLine = log.makeNewLogContextWithMessage({ msg: "→ Applying Terraform stack..."})
   const logStream = split2()
 
   let stdout: string = ""

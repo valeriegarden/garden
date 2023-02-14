@@ -197,7 +197,7 @@ export async function waitForResources({
     ctx.events.emit("log", { timestamp: new Date().getTime(), data: Buffer.from(msg, "utf-8"), ...logEventContext })
 
   const waitingMsg = `Waiting for resources to be ready...`
-  const statusLine = log.info({
+  const statusLine = log.makeNewLogContextWithMessage({
     symbol: "info",
     section: actionName,
     msg: waitingMsg,
@@ -207,7 +207,7 @@ export async function waitForResources({
   if (resources.length === 0) {
     const noResourcesMsg = `No resources to wait`
     emitLog(noResourcesMsg)
-    statusLine.setState({ symbol: "info", section: actionName, msg: noResourcesMsg })
+    statusLine.info({ symbol: "info", section: actionName, msg: noResourcesMsg })
     return []
   }
 
@@ -246,7 +246,7 @@ export async function waitForResources({
         lastMessage = status.lastMessage
         const symbol = status.warning === true ? "warning" : "info"
         const statusUpdateLogMsg = `${status.resource.kind}/${status.resource.metadata.name}: ${status.lastMessage}`
-        statusLine.setState({
+        statusLine.info({
           symbol,
           msg: statusUpdateLogMsg,
         })
@@ -274,7 +274,7 @@ export async function waitForResources({
 
   const readyMsg = `Resources ready`
   emitLog(readyMsg)
-  statusLine.setState({ symbol: "info", section: actionName, msg: readyMsg })
+  statusLine.info({ symbol: "info", section: actionName, msg: readyMsg })
 
   return statuses
 }

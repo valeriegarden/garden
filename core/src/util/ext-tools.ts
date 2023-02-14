@@ -296,11 +296,14 @@ export class PluginTool extends CliWrapper {
       const tmpPath = join(this.toolPath, this.versionDirname + "." + uuidv4().substr(0, 8))
       const targetAbsPath = join(tmpPath, ...this.targetSubpath.split(posix.sep))
 
-      const logEntry = log.info({
+      const logEntry = log.makeNewLogContextWithMessage({
         status: "active",
         msg: `Fetching ${this.name}...`,
       })
-      const debug = logEntry.debug(`Downloading ${this.buildSpec.url}...`)
+      const debug = logEntry.makeNewLogContextWithMessage({
+        msg: `Downloading ${this.buildSpec.url}...`,
+        level: LogLevel.debug,
+      })
 
       await ensureDir(tmpPath)
 
@@ -335,9 +338,9 @@ export class PluginTool extends CliWrapper {
       protocol === "file:"
         ? createReadStream(parsed.path!)
         : got.stream({
-            method: "GET",
-            url: this.buildSpec.url,
-          })
+          method: "GET",
+          url: this.buildSpec.url,
+        })
 
     // compute the sha256 checksum
     const hash = createHash("sha256")

@@ -1,4 +1,4 @@
-/*
+/*setState
  * Copyright (C) 2018-2022 Garden Technologies, Inc. <info@garden.io>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -30,6 +30,7 @@ import chalk = require("chalk")
 import hasha = require("hasha")
 import { pMemoizeDecorator } from "../lib/p-memoize"
 import AsyncLock from "async-lock"
+import { LogLevel } from "../logger/logger"
 
 const gitConfigAsyncLock = new AsyncLock()
 
@@ -252,15 +253,16 @@ export class GitHandler extends VcsHandler {
       return []
     }
 
-    log = log.debug(
-      `Scanning ${pathDescription} at ${path}\n→ Includes: ${include || "(none)"}\n→ Excludes: ${exclude || "(none)"}`
-    )
+    const gitLog = log.makeNewLogContextWithMessage({
+      msg: `Scanning ${pathDescription} at ${path}\n→ Includes: ${include || "(none)"}\n→ Excludes: ${exclude || "(none)"}`,
+      level: LogLevel.debug
+    })
 
     try {
       const pathStats = await stat(path)
 
       if (!pathStats.isDirectory()) {
-        log.warn({
+        gitLog.warn({
           symbol: "warning",
           msg: chalk.gray(`Expected directory at ${path}, but found ${getStatsType(pathStats)}.`),
         })
@@ -269,7 +271,7 @@ export class GitHandler extends VcsHandler {
     } catch (err) {
       // 128 = File no longer exists
       if (err.exitCode === 128 || err.code === "ENOENT") {
-        log.warn({
+        gitLog.warn({
           symbol: "warning",
           msg: chalk.gray(`Attempted to scan directory at ${path}, but it does not exist.`),
         })
@@ -279,8 +281,8 @@ export class GitHandler extends VcsHandler {
       }
     }
 
-    const git = this.gitCli(log, path, failOnPrompt)
-    const gitRoot = await this.getRepoRoot(log, path, failOnPrompt)
+    const git = this.gitCli(gitLog, path, failOnPrompt)
+    const gitRoot = await this.getRepoRoot(gitLog, path, failOnPrompt)
 
     // List modified files, so that we can ensure we have the right hash for them later
     const modified = new Set(
@@ -308,7 +310,7 @@ export class GitHandler extends VcsHandler {
     const submodules = await this.getSubmodules(path)
     const submodulePaths = submodules.map((s) => join(gitRoot, s.path))
     if (submodules.length > 0) {
-      log.silly(`Submodules listed at ${submodules.map((s) => `${s.path} (${s.url})`).join(", ")}`)
+      gitLog.silly(`Submodules listed at ${submodules.map((s) => `${s.path} (${s.url})`).join(", ")}`)
     }
 
     const files: VcsFile[] = []
@@ -370,7 +372,7 @@ export class GitHandler extends VcsHandler {
       }
       args.push(...patterns)
 
-      log.silly(`Calling git with args '${args.join(" ")}' in ${path}`)
+      gitLog.silly(`Calling git with args '${args.join(" ")}' in ${path}`)
       return execa("git", args, { cwd: path, buffer: false })
     }
 
@@ -406,7 +408,7 @@ export class GitHandler extends VcsHandler {
 
             if (!pathStats.isDirectory()) {
               const pathType = getStatsType(pathStats)
-              log.warn({
+              gitLog.warn({
                 symbol: "warning",
                 msg: chalk.gray(
                   `Expected submodule directory at ${path}, but found ${pathType}. ${submoduleErrorSuggestion}`
@@ -417,7 +419,7 @@ export class GitHandler extends VcsHandler {
           } catch (err) {
             // 128 = File no longer exists
             if (err.exitCode === 128 || err.code === "ENOENT") {
-              log.warn({
+              gitLog.warn({
                 symbol: "warning",
                 msg: chalk.yellow(
                   `Found reference to submodule at ${submoduleRelPath}, but the path could not be found. ${submoduleErrorSuggestion}`
@@ -431,7 +433,7 @@ export class GitHandler extends VcsHandler {
 
           files.push(
             ...(await this.getFiles({
-              log,
+              log: gitLog,
               path: submodulePath,
               pathDescription: "submodule",
               exclude: [],
@@ -485,7 +487,7 @@ export class GitHandler extends VcsHandler {
 
               // Make sure symlink is relative and points within `path`
               if (isAbsolute(target)) {
-                log.verbose(`Ignoring symlink with absolute target at ${resolvedPath}`)
+                gitLog.verbose(`Ignoring symlink with absolute target at ${resolvedPath}`)
                 return cb(null, { path: resolvedPath, hash: "" })
               } else if (target.startsWith("..")) {
                 realpath(resolvedPath, (realpathErr, realTarget) => {
@@ -499,7 +501,7 @@ export class GitHandler extends VcsHandler {
                   const relPath = relative(path, realTarget)
 
                   if (relPath.startsWith("..")) {
-                    log.verbose(`Ignoring symlink pointing outside of ${pathDescription} at ${resolvedPath}`)
+                    gitLog.verbose(`Ignoring symlink pointing outside of ${pathDescription} at ${resolvedPath}`)
                     return cb(null, { path: resolvedPath, hash: "" })
                   }
                   ensureHash(output, stats, cb)
@@ -515,7 +517,7 @@ export class GitHandler extends VcsHandler {
       })
     ).filter((f) => f.hash !== "")
 
-    log.debug(`Found ${result.length} files in ${pathDescription} ${path}`)
+    gitLog.debug(`Found ${result.length} files in ${pathDescription} ${path}`)
 
     return result
   }
@@ -568,20 +570,20 @@ export class GitHandler extends VcsHandler {
     const isCloned = await pathExists(absPath)
 
     if (!isCloned) {
-      const entry = log.info({ section: name, msg: `Fetching from ${url}`, status: "active" })
+      const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: `Fetching from ${url}`, status: "active" })
       const { repositoryUrl, hash } = parseGitUrl(url)
 
       try {
         await this.cloneRemoteSource(log, repositoryUrl, hash, absPath, failOnPrompt)
       } catch (err) {
-        entry.setError()
+        gitLog.setError()
         throw new RuntimeError(`Downloading remote ${sourceType} failed with error: \n\n${err}`, {
           repositoryUrl: url,
           message: err.message,
         })
       }
 
-      entry.setSuccess()
+      gitLog.setSuccess()
     }
 
     return absPath
@@ -594,7 +596,7 @@ export class GitHandler extends VcsHandler {
 
     await this.ensureRemoteSource({ url, name, sourceType, log, failOnPrompt })
 
-    const entry = log.info({ section: name, msg: "Getting remote state", status: "active" })
+    const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: "Getting remote state" })
     await git("remote", "update")
 
     const localCommitId = (await git("rev-parse", "HEAD"))[0]
@@ -603,7 +605,7 @@ export class GitHandler extends VcsHandler {
       : getCommitIdFromRefList(await git("ls-remote", repositoryUrl, hash))
 
     if (localCommitId !== remoteCommitId) {
-      entry.setState(`Fetching from ${url}`)
+      gitLog.info(`Fetching from ${url}`)
 
       try {
         await git("fetch", "--depth=1", "origin", hash)
@@ -611,16 +613,16 @@ export class GitHandler extends VcsHandler {
         // Update submodules if applicable (no-op if no submodules in repo)
         await git("submodule", "update", "--recursive")
       } catch (err) {
-        entry.setError()
+        gitLog.setError()
         throw new RuntimeError(`Updating remote ${sourceType} failed with error: \n\n${err}`, {
           repositoryUrl: url,
           message: err.message,
         })
       }
 
-      entry.setSuccess("Source updated")
+      gitLog.setSuccess("Source updated")
     } else {
-      entry.setSuccess("Source already up to date")
+      gitLog.setSuccess("Source already up to date")
     }
   }
 

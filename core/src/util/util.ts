@@ -157,7 +157,7 @@ export function createOutputStream(log: LogEntry) {
 
   outputStream.on("error", () => {})
   outputStream.on("data", (line: Buffer) => {
-    log.setState(renderOutputStream(line.toString()))
+    log.info(renderOutputStream(line.toString()))
   })
 
   return outputStream

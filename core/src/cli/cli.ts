@@ -368,7 +368,7 @@ ${renderCommands(commands)}
         } else {
           garden = await this.getGarden(workingDir, contextOpts)
 
-          nsLog.setState(renderHeader({ namespaceName: garden.namespace, environmentName: garden.environmentName }))
+          nsLog.info(renderHeader({ namespaceName: garden.namespace, environmentName: garden.environmentName }))
 
           if (!cloudApi && garden.projectId) {
             log.warn({
@@ -435,7 +435,7 @@ ${renderCommands(commands)}
             )}
               ${nodeEmoji.link}  ${chalk.blueBright.underline(namespaceUrl)}
             `
-            footerLog.setState(msg)
+            footerLog.info(msg)
           }
         }
 
@@ -504,7 +504,7 @@ ${renderCommands(commands)}
           })
         } else {
           // The command is protected and the user decided to not continue with the exectution.
-          log.setState("\nCommand aborted.")
+          log.info("\nCommand aborted.")
           result = {}
         }
         await garden.close()

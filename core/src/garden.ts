@@ -644,11 +644,8 @@ export class Garden {
 
       log.silly(`Resolving providers`)
 
-      log = log.info({
-        section: "providers",
-        msg: "Getting status...",
-        status: "active",
-      })
+      const providerLog = log.makeNewLogContext({ section: "providers" })
+      providerLog.info("Getting status...")
 
       const plugins = keyBy(await this.getAllPlugins(), "name")
 
@@ -688,7 +685,7 @@ export class Garden {
 
         return new ResolveProviderTask({
           garden: this,
-          log,
+          log: providerLog,
           plugin,
           config,
           version: this.version,
@@ -733,16 +730,16 @@ export class Garden {
       }
 
       if (gotCachedResult) {
-        log.setSuccess({ msg: chalk.green("Cached"), append: true })
-        log.info({
+        providerLog.setSuccess({ msg: chalk.green("Cached"), append: true })
+        providerLog.info({
           symbol: "info",
           msg: chalk.gray("Run with --force-refresh to force a refresh of provider statuses."),
         })
       } else {
-        log.setSuccess({ msg: chalk.green("Done"), append: true })
+        providerLog.setSuccess({ msg: chalk.green("Done"), append: true })
       }
 
-      log.silly(`Resolved providers: ${providers.map((p) => p.name).join(", ")}`)
+      providerLog.silly(`Resolved providers: ${providers.map((p) => p.name).join(", ")}`)
     })
 
     return keyBy(providers, "name")
@@ -849,12 +846,12 @@ export class Garden {
     const resolvedProviders = await this.resolveProviders(log)
     const rawModuleConfigs = await this.getRawModuleConfigs()
 
-    log = log.info({ status: "active", section: "graph", msg: `Resolving actions and modules...` })
+    const graphLog = log.makeNewLogContextWithMessage({ section: "graph", msg: `Resolving actions and modules...` })
 
     // Resolve the project module configs
     const resolver = new ModuleResolver({
       garden: this,
-      log,
+      log: graphLog,
       rawConfigs: rawModuleConfigs,
       resolvedProviders,
       graphResults,
@@ -881,7 +878,7 @@ export class Garden {
     // Convert modules to actions
     const { groups: moduleGroups, actions: moduleActionConfigs } = await convertModules(
       this,
-      log,
+      graphLog,
       resolvedModules,
       moduleGraph
     )
@@ -917,7 +914,7 @@ export class Garden {
       garden: this,
       configs: actionConfigs,
       groupConfigs: moduleGroups,
-      log,
+      log: graphLog,
       moduleGraph,
     })
 
@@ -946,7 +943,7 @@ export class Garden {
 
       const { addDependencies, addActions } = await router.provider.augmentGraph({
         pluginName,
-        log,
+        log: graphLog,
         providers: resolvedProviders,
         actions: graph.getActions(),
         events: undefined,
@@ -965,7 +962,7 @@ export class Garden {
           graph,
           config,
           router,
-          log,
+          log: graphLog,
           configsByKey: actionConfigs,
         })
         graph.addAction(action)
@@ -1010,7 +1007,7 @@ export class Garden {
       this.events.emit("stackGraph", graph.render())
     }
 
-    log.setSuccess({ msg: chalk.green("Done"), append: true })
+    graphLog.setSuccess(chalk.green("Done"))
 
     return graph.toConfigGraph()
   }
@@ -1536,7 +1533,8 @@ export const resolveGardenParams = profileAsync(async function _resolveGardenPar
   if (!opts.noEnterprise && cloudApi) {
     const distroName = getCloudDistributionName(cloudDomain || "")
     const section = distroName === "Garden Enterprise" ? "garden-enterprise" : "garden-cloud"
-    const cloudLog = log.info({ section, msg: "Initializing...", status: "active" })
+    const cloudLog = log.makeNewLogContext({ section })
+    cloudLog.info("Initializing...")
 
     let project: CloudProject | undefined
 

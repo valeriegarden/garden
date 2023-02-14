@@ -71,8 +71,7 @@ export class DeployTask extends ExecuteActionTask<DeployAction, DeployStatus> {
     const devModeSkipRedeploy = status.detail?.devMode && devMode
     const localModeSkipRedeploy = status.detail?.localMode && localMode
 
-    const log = this.log.info({
-      status: "active",
+    const log = this.log.makeNewLogContextWithMessage({
       section: action.name,
       msg: `Deploying version ${version}...`,
     })
@@ -83,10 +82,7 @@ export class DeployTask extends ExecuteActionTask<DeployAction, DeployStatus> {
       (version === status.detail?.version || devModeSkipRedeploy || localModeSkipRedeploy)
     ) {
       // already deployed and ready
-      log.setSuccess({
-        msg: chalk.green("Already deployed"),
-        append: true,
-      })
+      log.setSuccess(chalk.green("Already deployed"))
     } else {
       try {
         status = await router.deploy.deploy({
@@ -102,10 +98,7 @@ export class DeployTask extends ExecuteActionTask<DeployAction, DeployStatus> {
         throw err
       }
 
-      log.setSuccess({
-        msg: chalk.green(`Done (took ${log.getDuration(1)} sec)`),
-        append: true,
-      })
+      log.setSuccess(chalk.green(`Done (took ${log.getDuration(1)} sec)`))
     }
 
     const executedAction = executeAction(action, { status })

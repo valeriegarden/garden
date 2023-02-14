@@ -30,7 +30,7 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
   }
 
   async getStatus({ dependencyResults }: ActionTaskStatusParams<RunAction>) {
-    const log = this.log.info({
+    const taskLog = this.log.makeNewLogContextWithMessage({
       section: this.action.name,
       msg: "Checking result...",
       status: "active",
@@ -43,9 +43,9 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
       const status = await router.run.getResult({
         graph: this.graph,
         action,
-        log,
+        log: taskLog,
       })
-      log.setSuccess({ msg: chalk.green(`Done`), append: true })
+      taskLog.setSuccess({ msg: chalk.green(`Done`), append: true })
 
       // Should return a null value here if there is no result
       if (status.detail === null) {
@@ -54,7 +54,7 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
 
       return { ...status, executedAction: executeAction(action, { status }) }
     } catch (err) {
-      log.setError()
+      taskLog.setError()
       throw err
     }
   }
@@ -62,7 +62,7 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
   async process({ dependencyResults }: ActionTaskProcessParams<RunAction, GetRunResult>) {
     const action = this.getResolvedAction(this.action, dependencyResults)
 
-    const log = this.log.info({
+    const taskLog = this.log.makeNewLogContextWithMessage({
       section: action.key(),
       msg: "Running...",
       status: "active",
@@ -76,20 +76,20 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
       status = await actions.run.run({
         graph: this.graph,
         action,
-        log,
+        log: taskLog,
         interactive: false,
       })
     } catch (err) {
-      log.setError()
+      taskLog.setError()
       throw err
     }
     if (status.state === "ready") {
-      log.setSuccess({
-        msg: chalk.green(`Done (took ${log.getDuration(1)} sec)`),
+      taskLog.setSuccess({
+        msg: chalk.green(`Done (took ${taskLog.getDuration(1)} sec)`),
         append: true,
       })
     } else {
-      log.setError(`Failed!`)
+      taskLog.setError(`Failed!`)
       throw new RunTaskError(status.detail?.log)
     }
 

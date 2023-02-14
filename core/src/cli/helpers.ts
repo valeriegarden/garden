@@ -22,7 +22,7 @@ import { GardenBaseError, InternalError, ParameterError, toGardenError } from ".
 import { getPackageVersion, removeSlice } from "../util/util"
 import { LogEntry } from "../logger/log-entry"
 import { STATIC_DIR, VERSION_CHECK_URL, gardenEnv, ERROR_LOG_FILENAME } from "../constants"
-import { printWarningMessage } from "../logger/util"
+import { formatError, printWarningMessage } from "../logger/util"
 import { GlobalConfigStore } from "../config-store/global"
 import { got } from "../util/http"
 import minimist = require("minimist")
@@ -31,7 +31,6 @@ import { globalOptions, GlobalOptions } from "./params"
 import { BuiltinArgs, Command, CommandGroup } from "../commands/base"
 import { DeepPrimitiveMap } from "../config/common"
 import { validateGitInstall } from "../vcs/vcs"
-import { renderError } from "../logger/renderers"
 import { FileWriter } from "../logger/writers/file-writer"
 
 let _cliStyles: any
@@ -473,13 +472,13 @@ export function renderCommandErrors(logger: Logger, errors: Error[], logEntry?: 
   const log = logEntry || logger
 
   for (const error of gardenErrors) {
-    const entry = log.error({
+    log.error({
       msg: error.message,
       error,
     })
     // Output error details to console when log level is silly
     log.silly({
-      msg: renderError(entry),
+      msg: formatError({ msg: error.message, error }),
     })
   }
 

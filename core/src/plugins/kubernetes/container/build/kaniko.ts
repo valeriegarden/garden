@@ -104,7 +104,7 @@ export const kanikoBuild: BuildHandler = async (params) => {
     deploymentName: utilDeploymentName,
   })
 
-  log.setState(`Building image ${localId}...`)
+  log.info(`Building image ${localId}...`)
 
   // Use the project namespace by default
   let kanikoNamespace = provider.config.kaniko?.namespace || projectNamespace

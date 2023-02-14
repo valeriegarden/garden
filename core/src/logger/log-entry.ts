@@ -14,8 +14,9 @@ import { LogLevel, logLevelMap, LogNode } from "./logger"
 import { Omit } from "../util/util"
 import { getChildEntries, findParentEntry, getAllSections } from "./util"
 import { GardenError } from "../exceptions"
-import { CreateNodeParams, Logger, PlaceholderOpts } from "./logger"
+import { CreateLogEntryParams, Logger, PlaceholderOpts } from "./logger"
 import uniqid from "uniqid"
+import { ActionKind } from "../plugin/action-types"
 
 export type EmojiName = keyof typeof nodeEmoji.emoji
 export type LogSymbol = keyof typeof logSymbols | "empty"
@@ -25,6 +26,18 @@ export type TaskLogStatus = "active" | "success" | "error"
 export interface LogEntryMetadata {
   task?: TaskMetadata
   workflowStep?: WorkflowStepMetadata
+}
+
+export interface ActionMetadata {
+  actionKind: ActionKind
+  actionName: string
+  // TODO: Literal type?
+  actionType: string
+}
+
+export interface PluginMetadata {
+  // TODO: Literal type?
+  pluginName: string
 }
 
 export interface TaskMetadata {
@@ -74,7 +87,15 @@ export interface LogEntryConstructor extends LogEntryParams {
   isPlaceholder?: boolean
 }
 
-function resolveCreateParams(level: LogLevel, params: string | LogEntryParams): CreateNodeParams {
+export interface ActionLogEntryConstructor extends LogEntryConstructor {
+  actionMetadata: ActionMetadata
+}
+
+export interface PluginLogEntryConstructor extends ActionLogEntryConstructor {
+  pluginMetadata: PluginMetadata
+}
+
+function resolveCreateParams(level: LogLevel, params: string | LogEntryParams): CreateLogEntryParams {
   if (typeof params === "string") {
     return { msg: params, level }
   }
@@ -104,6 +125,7 @@ export class LogEntry implements LogNode {
   public readonly errorData?: GardenError
   public readonly childEntriesInheritLevel?: boolean
   public readonly id?: string
+  public type: "logEntry"
   public children: LogEntry[]
   public isPlaceholder: boolean
   public revision: number
@@ -125,20 +147,22 @@ export class LogEntry implements LogNode {
     this.isPlaceholder = params.isPlaceholder || false
     this.revision = -1
 
-    if (!params.isPlaceholder) {
-      this.update({
-        msg: params.msg,
-        emoji: params.emoji,
-        section: params.section,
-        symbol: params.symbol,
-        status: params.level === LogLevel.error ? "error" : params.status,
-        data: params.data,
-        dataFormat: params.dataFormat,
-        append: params.append,
-      })
-    } else {
-      this.messages = [{ timestamp: new Date() }]
-    }
+    // TODO
+    // if (!params.isPlaceholder) {
+    //   this.update({
+    //     msg: params.msg,
+    //     emoji: params.emoji,
+    //     section: params.section,
+    //     symbol: params.symbol,
+    //     status: params.level === LogLevel.error ? "error" : params.status,
+    //     data: params.data,
+    //     dataFormat: params.dataFormat,
+    //     append: params.append,
+    //   })
+    // } else {
+    //   this.messages = [{ timestamp: new Date() }]
+    // }
+    this.messages = [{ timestamp: new Date() }]
   }
 
   /**
@@ -147,63 +171,63 @@ export class LogEntry implements LogNode {
    * 2. append is always set explicitly (the next message does not inherit the previous value)
    * 3. next metadata is merged with the previous metadata
    */
-  private update(updateParams: UpdateLogEntryParams): void {
-    this.revision = this.revision + 1
-    const latestMessage = this.getLatestMessage()
+  // private update(updateParams: UpdateLogEntryParams): void {
+  //   this.revision = this.revision + 1
+  //   const latestMessage = this.getLatestMessage()
 
-    // Explicitly set all the fields so the shape stays consistent
-    const nextMessage: LogEntryMessage = {
-      // Ensure empty string gets set
-      msg: typeof updateParams.msg === "string" ? updateParams.msg : latestMessage.msg,
-      emoji: updateParams.emoji || latestMessage.emoji,
-      section: updateParams.section || latestMessage.section,
-      status: updateParams.status || latestMessage.status,
-      symbol: updateParams.symbol || latestMessage.symbol,
-      data: updateParams.data || latestMessage.data,
-      dataFormat: updateParams.dataFormat || latestMessage.dataFormat,
-      // Next message does not inherit the append field
-      append: updateParams.append,
-      timestamp: new Date(),
-    }
+  //   // Explicitly set all the fields so the shape stays consistent
+  //   const nextMessage: LogEntryMessage = {
+  //     // Ensure empty string gets set
+  //     msg: typeof updateParams.msg === "string" ? updateParams.msg : latestMessage.msg,
+  //     emoji: updateParams.emoji || latestMessage.emoji,
+  //     section: updateParams.section || latestMessage.section,
+  //     status: updateParams.status || latestMessage.status,
+  //     symbol: updateParams.symbol || latestMessage.symbol,
+  //     data: updateParams.data || latestMessage.data,
+  //     dataFormat: updateParams.dataFormat || latestMessage.dataFormat,
+  //     // Next message does not inherit the append field
+  //     append: updateParams.append,
+  //     timestamp: new Date(),
+  //   }
 
-    // Hack to preserve section alignment if spinner disappears
-    const hadSpinner = latestMessage.status === "active"
-    const hasSymbolOrSpinner = nextMessage.symbol || nextMessage.status === "active"
-    if (nextMessage.section && hadSpinner && !hasSymbolOrSpinner) {
-      nextMessage.symbol = "empty"
-    }
+  //   // Hack to preserve section alignment if spinner disappears
+  //   const hadSpinner = latestMessage.status === "active"
+  //   const hasSymbolOrSpinner = nextMessage.symbol || nextMessage.status === "active"
+  //   if (nextMessage.section && hadSpinner && !hasSymbolOrSpinner) {
+  //     nextMessage.symbol = "empty"
+  //   }
 
-    if (this.isPlaceholder) {
-      // If it's a placeholder, this will be the first message...
-      this.messages = [nextMessage]
-      this.isPlaceholder = false
-    } else {
-      // ...otherwise we push it
-      this.messages = [...(this.messages || []), nextMessage]
-    }
+  //   if (this.isPlaceholder) {
+  //     // If it's a placeholder, this will be the first message...
+  //     this.messages = [nextMessage]
+  //     this.isPlaceholder = false
+  //   } else {
+  //     // ...otherwise we push it
+  //     this.messages = [...(this.messages || []), nextMessage]
+  //   }
 
-    if (updateParams.metadata) {
-      this.metadata = { ...(this.metadata || {}), ...updateParams.metadata }
-    }
-  }
+  //   if (updateParams.metadata) {
+  //     this.metadata = { ...(this.metadata || {}), ...updateParams.metadata }
+  //   }
+  // }
 
   // Update node and child nodes
-  private deepUpdate(updateParams: UpdateLogEntryParams): void {
-    const wasActive = this.getLatestMessage().status === "active"
+  // private deepUpdate(updateParams: UpdateLogEntryParams): void {
+  //   const wasActive = this.getLatestMessage().status === "active"
 
-    this.update(updateParams)
+  //   this.update(updateParams)
 
-    // Stop active child nodes if no longer active
-    if (wasActive && updateParams.status !== "active") {
-      getChildEntries(this).forEach((entry) => {
-        if (entry.getLatestMessage().status === "active") {
-          entry.update({ status: "done" })
-        }
-      })
-    }
-  }
+  //   // Stop active child nodes if no longer active
+  //   if (wasActive && updateParams.status !== "active") {
+  //     getChildEntries(this).forEach((entry) => {
+  //       if (entry.getLatestMessage().status === "active") {
+  //         entry.update({ status: "done" })
+  //       }
+  //     })
+  //   }
+  // }
 
-  private createNode(params: CreateNodeParams) {
+  private createLogEntry(params: CreateLogEntryParams) {
     const indent = params.indent !== undefined ? params.indent : (this.indent || 0) + 1
 
     // If childEntriesInheritLevel is set to true, all children must have a level geq to the level
@@ -226,37 +250,74 @@ export class LogEntry implements LogNode {
     })
   }
 
-  private addNode(params: CreateNodeParams): LogEntry {
-    const entry = this.createNode(params)
+  private log(params: CreateLogEntryParams): void {
+    const entry = this.createLogEntry(params)
     if (this.root.storeEntries) {
       this.children.push(entry)
     }
     this.root.onGraphChange(entry)
-    return entry
   }
 
-  silly(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.silly, params))
+  /**
+   * Create a new logger with same context, optionally overwriting some fields.
+   *
+   * TODO: Overwrite with params
+   */
+  makeNewLogContext(params: Partial<LogEntryConstructor>) {
+    return new LogEntry({
+      level: params.level || this.level,
+      parent: this,
+      root: this.root,
+      fromStdStream:  params.fromStdStream || this.fromStdStream,
+      error: this.errorData || params.error,
+      childEntriesInheritLevel: params.childEntriesInheritLevel || this.childEntriesInheritLevel,
+      metadata:  params.metadata || this.metadata,
+    })
   }
 
-  debug(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.debug, params))
+  /**
+   * Create a new logger with same context, optionally overwriting some fields.
+   *
+   * TODO: Overwrite with params
+   */
+  makeNewLogContextWithMessage(params: Partial<LogEntryConstructor>) {
+    const newLog = new LogEntry({
+      level: params.level || this.level,
+      parent: this,
+      root: this.root,
+      fromStdStream:  params.fromStdStream || this.fromStdStream,
+      error: this.errorData || params.error,
+      childEntriesInheritLevel: params.childEntriesInheritLevel || this.childEntriesInheritLevel,
+      metadata:  params.metadata || this.metadata,
+    })
+    if (params.msg) {
+      newLog.info(params.msg)
+    }
+    return newLog
   }
 
-  verbose(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.verbose, params))
+  silly(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.silly, params))
   }
 
-  info(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.info, params))
+  debug(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.debug, params))
   }
 
-  warn(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.warn, params))
+  verbose(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.verbose, params))
   }
 
-  error(params: string | LogEntryParams): LogEntry {
-    return this.addNode(resolveCreateParams(LogLevel.error, params))
+  info(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.info, params))
+  }
+
+  warn(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.warn, params))
+  }
+
+  error(params: string | LogEntryParams): void {
+    this.log(resolveCreateParams(LogLevel.error, params))
   }
 
   getMetadata() {
@@ -289,71 +350,57 @@ export class LogEntry implements LogNode {
     metadata,
   }: PlaceholderOpts = {}): LogEntry {
     // Ensure placeholder child entries align with parent context
-    const indentForNode = Math.max((indent || this.indent || 0) - 1, -1)
-    return this.addNode({
+    const currentIndentation = Math.max((indent || this.indent || 0) - 1, -1)
+    return new LogEntry({
+      indent: currentIndentation,
       level,
-      indent: indentForNode,
-      childEntriesInheritLevel,
-      isPlaceholder: true,
       metadata,
+      childEntriesInheritLevel,
+      root: this.root,
+      parent: this,
     })
+    // return this.log({
+    //   level,
+    //   indent: indentForNode,
+    //   childEntriesInheritLevel,
+    //   isPlaceholder: true,
+    //   metadata,
+    // })
   }
 
-  // Preserves status
-  setState(params?: string | UpdateLogEntryParams): LogEntry {
-    this.deepUpdate({ ...resolveUpdateParams(params) })
-    this.root.onGraphChange(this)
-    return this
-  }
-
-  setDone(params?: string | Omit<UpdateLogEntryParams, "status">): LogEntry {
-    this.deepUpdate({ ...resolveUpdateParams(params), status: "done" })
-    this.root.onGraphChange(this)
-    return this
-  }
-
-  setSuccess(params?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): LogEntry {
-    this.deepUpdate({
+  // TODO: Keeping this for now, will update in a follow up PR
+  setSuccess(params?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): void {
+    this.info({
       ...resolveUpdateParams(params),
       symbol: "success",
       status: "success",
     })
-    this.root.onGraphChange(this)
-    return this
   }
 
-  setError(params?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): LogEntry {
-    this.deepUpdate({
+  // TODO: Keeping this for now, will update in a follow up PR
+  setError(params?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): void {
+    this.error({
       ...resolveUpdateParams(params),
       symbol: "error",
       status: "error",
     })
-    this.root.onGraphChange(this)
-    return this
   }
 
-  setWarn(param?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): LogEntry {
-    this.deepUpdate({
+  // TODO: Keeping this for now, will update in a follow up PR
+  setWarn(param?: string | Omit<UpdateLogEntryParams, "status" & "symbol">): void {
+    this.warn({
       ...resolveUpdateParams(param),
       symbol: "warning",
       status: "warn",
     })
-    this.root.onGraphChange(this)
-    return this
   }
 
   stopAll() {
     return this.root.stop()
   }
 
-  stop() {
-    // Stop gracefully if still in active state
-    if (this.getLatestMessage().status === "active") {
-      this.update({ symbol: "empty", status: "done" })
-      this.root.onGraphChange(this)
-    }
-    return this
-  }
+  // TODO: Remove
+  stop() {}
 
   getChildEntries() {
     return getChildEntries(this)
@@ -394,3 +441,4 @@ export class LogEntry implements LogNode {
     return round((new Date().getTime() - this.timestamp.getTime()) / 1000, precision)
   }
 }
+

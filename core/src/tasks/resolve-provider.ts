@@ -360,10 +360,9 @@ export class ResolveProviderTask extends BaseTask<Provider> {
 
     if (this.forceInit || !status.ready) {
       // Deliberately setting the text on the parent log here
-      this.log.setState(`Preparing environment...`)
+      this.log.info(`Preparing environment...`)
 
-      const envLogEntry = this.log.info({
-        status: "active",
+      const envLogEntry = this.log.makeNewLogContextWithMessage({
         section: pluginName,
         msg: "Configuring...",
       })
@@ -378,7 +377,7 @@ export class ResolveProviderTask extends BaseTask<Provider> {
 
       status = result.status
 
-      envLogEntry.setSuccess({ msg: chalk.green("Ready"), append: true })
+      envLogEntry.setSuccess({ msg: chalk.green("Ready") })
     }
 
     if (!status.ready) {
