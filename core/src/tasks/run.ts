@@ -30,10 +30,11 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
   }
 
   async getStatus({ dependencyResults }: ActionTaskStatusParams<RunAction>) {
-    const taskLog = this.log.makeNewLogContextWithMessage({
-      section: this.action.name,
-      msg: "Checking result...",
-    })
+    const taskLog = this.log
+      .makeNewLogContext({
+        section: this.action.name,
+      })
+      .info("Checking result...")
     const router = await this.garden.getActionRouter()
     const action = this.getResolvedAction(this.action, dependencyResults)
 
@@ -61,10 +62,11 @@ export class RunTask extends ExecuteActionTask<RunAction, GetRunResult> {
   async process({ dependencyResults }: ActionTaskProcessParams<RunAction, GetRunResult>) {
     const action = this.getResolvedAction(this.action, dependencyResults)
 
-    const taskLog = this.log.makeNewLogContextWithMessage({
-      section: action.key(),
-      msg: "Running...",
-    })
+    const taskLog = this.log
+      .makeNewLogContext({
+        section: action.key(),
+      })
+      .info("Running...")
 
     const actions = await this.garden.getActionRouter()
 

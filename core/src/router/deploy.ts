@@ -87,10 +87,11 @@ export const deployRouter = (baseParams: BaseRouterParams) =>
     delete: async (params) => {
       const { action, router, handlers } = params
 
-      const log = params.log.makeNewLogContextWithMessage({
-        section: action.key(),
-        msg: "Deleting...",
-      })
+      const log = params.log
+        .makeNewLogContext({
+          section: action.key(),
+        })
+        .info("Deleting...")
 
       const status = await handlers.getStatus({ ...params, devMode: false, localMode: false })
 

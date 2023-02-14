@@ -362,10 +362,11 @@ export class ResolveProviderTask extends BaseTask<Provider> {
       // Deliberately setting the text on the parent log here
       this.log.info(`Preparing environment...`)
 
-      const envLogEntry = this.log.makeNewLogContextWithMessage({
-        section: pluginName,
-        msg: "Configuring...",
-      })
+      const envLogEntry = this.log
+        .makeNewLogContext({
+          section: pluginName,
+        })
+        .info("Configuring...")
 
       // TODO: avoid calling the handler manually
       const prepareHandler = await actions.provider["getPluginHandler"]({

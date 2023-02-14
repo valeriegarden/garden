@@ -73,7 +73,7 @@ export function leftPad(entry: LogEntry): string {
 
 export function renderEmoji(entry: LogEntry): string {
   if (entry.emoji) {
-    return printEmoji(entry.emoji) + " "
+    return printEmoji(entry.emoji, entry.parent) + " "
   }
   return ""
 }
@@ -95,7 +95,7 @@ export function renderSymbolBasic(entry: LogEntry): string {
   }
 
   // Always show symbol with sections
-  if (symbol && entry.section) {
+  if (!symbol && entry.section) {
     symbol = "info"
   }
 

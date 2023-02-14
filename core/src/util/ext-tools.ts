@@ -296,13 +296,12 @@ export class PluginTool extends CliWrapper {
       const tmpPath = join(this.toolPath, this.versionDirname + "." + uuidv4().substr(0, 8))
       const targetAbsPath = join(tmpPath, ...this.targetSubpath.split(posix.sep))
 
-      const logEntry = log.makeNewLogContextWithMessage({
-        msg: `Fetching ${this.name}...`,
-      })
-      const debug = logEntry.makeNewLogContextWithMessage({
-        msg: `Downloading ${this.buildSpec.url}...`,
-        level: LogLevel.debug,
-      })
+      const downloadLog = log.makeNewLogContext({}).info(`Fetching ${this.name}...`)
+      const debug = downloadLog
+        .makeNewLogContext({
+          level: LogLevel.debug,
+        })
+        .info(`Downloading ${this.buildSpec.url}...`)
 
       await ensureDir(tmpPath)
 
@@ -325,7 +324,7 @@ export class PluginTool extends CliWrapper {
       }
 
       debug && debug.setSuccess("Done")
-      logEntry.setSuccess(`Fetched ${this.name}`)
+      downloadLog.setSuccess(`Fetched ${this.name}`)
     })
   }
 

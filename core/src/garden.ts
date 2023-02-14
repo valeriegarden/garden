@@ -846,7 +846,7 @@ export class Garden {
     const resolvedProviders = await this.resolveProviders(log)
     const rawModuleConfigs = await this.getRawModuleConfigs()
 
-    const graphLog = log.makeNewLogContextWithMessage({ section: "graph", msg: `Resolving actions and modules...` })
+    const graphLog = log.makeNewLogContext({ section: "graph" }).info(`Resolving actions and modules...`)
 
     // Resolve the project module configs
     const resolver = new ModuleResolver({
@@ -1031,15 +1031,7 @@ export class Garden {
     return resolveAction({ garden: this, action, graph, log })
   }
 
-  async resolveActions<T extends Action>({
-    actions,
-    graph,
-    log,
-  }: {
-    actions: T[]
-    log: Log
-    graph?: ConfigGraph
-  }) {
+  async resolveActions<T extends Action>({ actions, graph, log }: { actions: T[]; log: Log; graph?: ConfigGraph }) {
     if (!graph) {
       graph = await this.getConfigGraph({ log, emit: false })
     }

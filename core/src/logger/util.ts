@@ -8,12 +8,11 @@
 
 import nodeEmoji from "node-emoji"
 import chalk, { Chalk } from "chalk"
-import { formatGardenErrorWithDetail, getLogger } from "./logger"
+// import { formatGardenErrorWithDetail } from "./logger"
 import { Log, EmojiName, LogEntryMessage } from "./log-entry"
 import hasAnsi from "has-ansi"
 import dedent from "dedent"
 import stringWidth from "string-width"
-import { GardenError } from "../exceptions"
 
 // Add platforms/terminals?
 export function envSupportsEmoji() {
@@ -87,38 +86,37 @@ export function getTerminalWidth(stream: NodeJS.WriteStream = process.stdout) {
 /**
  * Prints emoji if supported and adds padding to the right (otherwise subsequent text flows over the emoji).
  */
-export function printEmoji(emoji: EmojiName) {
-  const logger = getLogger()
-  if (logger.useEmoji && nodeEmoji.hasEmoji(emoji)) {
+export function printEmoji(emoji: EmojiName, log: Log) {
+  if (log.root.useEmoji && nodeEmoji.hasEmoji(emoji)) {
     return `${nodeEmoji.get(emoji)} `
   }
   return ""
 }
 
 export function printHeader(log: Log, command: string, emoji: EmojiName): void {
-  log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji))
+  log.info(chalk.bold.magenta(command) + " " + printEmoji(emoji, log))
   log.info("") // Print new line after header
 }
 
 export function printFooter(log: Log) {
   log.info("") // Print new line before footer
-  return log.info(chalk.bold.magenta("Done!") + " " + printEmoji("heavy_check_mark"))
+  return log.info(chalk.bold.magenta("Done!") + " " + printEmoji("heavy_check_mark", log))
 }
 
 export function printWarningMessage(log: Log, text: string) {
   return log.info({ emoji: "warning", msg: chalk.bold.yellow(text) })
 }
 
-
 // TODO @eysi: This function doesn't really make sense as is.
-export function formatError({ msg, error }: { msg: string, error?: GardenError }) {
+// TODO @eysi: Set error: GardenError. Removing for now due circular dep.
+// TODO @eysi: Re-enable after fixing circ-dep.
+export function formatError({ msg, error }: { msg: string; error?: any }) {
   if (error) {
-    return formatGardenErrorWithDetail(error)
+    // return formatGardenErrorWithDetail(error)
   }
 
   return msg
 }
-
 
 interface DividerOpts {
   width?: number
@@ -133,7 +131,14 @@ const getSideDividerWidth = (width: number, titleWidth: number) => (width - titl
 const getNumberOfCharsPerWidth = (char: string, width: number) => width / stringWidth(char)
 
 // Adapted from https://github.com/JureSotosek/ink-divider
-export function renderDivider({ width = 80, char = "─", titlePadding = 1, color, title, padding = 0 }: DividerOpts = {}) {
+export function renderDivider({
+  width = 80,
+  char = "─",
+  titlePadding = 1,
+  color,
+  title,
+  padding = 0,
+}: DividerOpts = {}) {
   const pad = " "
 
   if (!color) {

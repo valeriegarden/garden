@@ -176,12 +176,13 @@ export class Log {
     return logEntry
   }
 
-  private log(params: CreateLogEntryParams): void {
+  private log(params: CreateLogEntryParams): Log {
     const entry = this.createLogEntry(params)
     if (this.root.storeEntries) {
       this.entries.push(entry)
     }
     this.root.log(entry)
+    return this
   }
 
   /**
@@ -192,6 +193,7 @@ export class Log {
   makeNewLogContext(params: Partial<LogConstructor>) {
     return new Log({
       level: params.level || this.level,
+      section: params.section || this.section,
       parent: this,
       root: this.root,
       fixLevel: params.fixLevel || this.fixLevel,
@@ -199,48 +201,28 @@ export class Log {
     })
   }
 
-  /**
-   * Create a new logger with same context, optionally overwriting some fields.
-   *
-   * TODO: Overwrite with params
-   */
-  makeNewLogContextWithMessage(params: Partial<LogConstructor> & Partial<MessageBase>) {
-    const newLog = new Log({
-      level: params.level || this.level,
-      parent: this,
-      root: this.root,
-      fixLevel: params.fixLevel || this.fixLevel,
-      metadata:  params.metadata || this.metadata,
-    })
-    // TOOD @eysi: Handle other log params
-    if (params.msg) {
-      newLog.info(params.msg)
-    }
-    return newLog
+  silly(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.silly, params))
   }
 
-  silly(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.silly, params))
+  debug(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.debug, params))
   }
 
-  debug(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.debug, params))
+  verbose(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.verbose, params))
   }
 
-  verbose(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.verbose, params))
+  info(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.info, params))
   }
 
-  info(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.info, params))
+  warn(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.warn, params))
   }
 
-  warn(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.warn, params))
-  }
-
-  error(params: string | LogEntryParams): void {
-    this.log(resolveCreateParams(LogLevel.error, params))
+  error(params: string | LogEntryParams): Log {
+    return this.log(resolveCreateParams(LogLevel.error, params))
   }
 
   getMetadata() {
@@ -271,8 +253,8 @@ export class Log {
   }
 
   // TODO: Keeping this for now, will update in a follow up PR
-  setSuccess(params?: string | Omit<LogEntryParams, "status" & "symbol">): void {
-    this.info({
+  setSuccess(params?: string | Omit<LogEntryParams, "status" & "symbol">): Log {
+    return this.info({
       ...resolveCreateParams(LogLevel.info, params || {}),
       symbol: "success",
       status: "success",
@@ -280,8 +262,8 @@ export class Log {
   }
 
   // TODO: Keeping this for now, will update in a follow up PR
-  setError(params?: string | Omit<LogEntryParams, "status" & "symbol">): void {
-    this.error({
+  setError(params?: string | Omit<LogEntryParams, "status" & "symbol">): Log {
+    return this.error({
       ...resolveCreateParams(LogLevel.info, params || {}),
       symbol: "error",
       status: "error",
@@ -289,16 +271,12 @@ export class Log {
   }
 
   // TODO: Keeping this for now, will update in a follow up PR
-  setWarn(params?: string | Omit<LogEntryParams, "status" & "symbol">): void {
-    this.warn({
+  setWarn(params?: string | Omit<LogEntryParams, "status" & "symbol">): Log {
+    return this.warn({
       ...resolveCreateParams(LogLevel.info, params || {}),
       symbol: "warning",
       status: "warn",
     })
-  }
-
-  stopAll() {
-    return this.root.stop()
   }
 
   getLogEntries() {

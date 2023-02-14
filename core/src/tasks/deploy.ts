@@ -71,10 +71,11 @@ export class DeployTask extends ExecuteActionTask<DeployAction, DeployStatus> {
     const devModeSkipRedeploy = status.detail?.devMode && devMode
     const localModeSkipRedeploy = status.detail?.localMode && localMode
 
-    const log = this.log.makeNewLogContextWithMessage({
-      section: action.name,
-      msg: `Deploying version ${version}...`,
-    })
+    const log = this.log
+      .makeNewLogContext({
+        section: action.name,
+      })
+      .info(`Deploying version ${version}...`)
 
     if (
       !this.force &&

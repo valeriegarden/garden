@@ -32,7 +32,7 @@ import { LogLevel } from "../logger/logger"
 const gardenClientName = "garden-core"
 const gardenClientVersion = getPackageVersion()
 
-export class EnterpriseApiDuplicateProjectsError extends EnterpriseApiError { }
+export class EnterpriseApiDuplicateProjectsError extends EnterpriseApiError {}
 
 // If a GARDEN_AUTH_TOKEN is present and Garden is NOT running from a workflow runner pod,
 // switch to ci-token authentication method.
@@ -171,7 +171,7 @@ export class CloudApi {
   public namespaceId?: number
   public sessionRegistered = false
 
-  constructor(private log: Log, public domain: string, private globalConfigStore: GlobalConfigStore) { }
+  constructor(private log: Log, public domain: string, private globalConfigStore: GlobalConfigStore) {}
 
   /**
    * Initialize the Cloud API.
@@ -207,7 +207,7 @@ export class CloudApi {
     const distroName = getCloudDistributionName(api.domain)
     const section = distroName === "Garden Enterprise" ? "garden-enterprise" : "garden-cloud"
 
-    const enterpriseLog = skipLogging ? null : log.makeNewLogContextWithMessage({ section, msg: "Authorizing..." })
+    const enterpriseLog = skipLogging ? null : log.makeNewLogContext({ section }).info("Authorizing...")
 
     if (gardenEnv.GARDEN_AUTH_TOKEN) {
       // Throw if using an invalid "CI" access token
@@ -465,7 +465,8 @@ export class CloudApi {
       this.log.debug({ msg: `Failed to refresh the token.` })
       const detail = is401Error(err) ? { statusCode: err.response.statusCode } : {}
       throw new EnterpriseApiError(
-        `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${err.message
+        `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${
+          err.message
         }`,
         detail
       )
@@ -688,7 +689,8 @@ export class CloudApi {
     } catch (err) {
       if (!is401Error(err)) {
         throw new EnterpriseApiError(
-          `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${err.message
+          `An error occurred while verifying client auth token with ${getCloudDistributionName(this.domain)}: ${
+            err.message
           }`,
           {}
         )

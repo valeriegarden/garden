@@ -253,10 +253,11 @@ export class GitHandler extends VcsHandler {
       return []
     }
 
-    const gitLog = log.makeNewLogContextWithMessage({
-      msg: `Scanning ${pathDescription} at ${path}\n→ Includes: ${include || "(none)"}\n→ Excludes: ${exclude || "(none)"}`,
-      level: LogLevel.debug
-    })
+    const gitLog = log
+      .makeNewLogContext({})
+      .debug(
+        `Scanning ${pathDescription} at ${path}\n→ Includes: ${include || "(none)"}\n→ Excludes: ${exclude || "(none)"}`
+      )
 
     try {
       const pathStats = await stat(path)
@@ -570,7 +571,7 @@ export class GitHandler extends VcsHandler {
     const isCloned = await pathExists(absPath)
 
     if (!isCloned) {
-      const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: `Fetching from ${url}` })
+      const gitLog = log.makeNewLogContext({ section: name }).info(`Fetching from ${url}`)
       const { repositoryUrl, hash } = parseGitUrl(url)
 
       try {
@@ -596,7 +597,7 @@ export class GitHandler extends VcsHandler {
 
     await this.ensureRemoteSource({ url, name, sourceType, log, failOnPrompt })
 
-    const gitLog = log.makeNewLogContextWithMessage({ section: name, msg: "Getting remote state" })
+    const gitLog = log.makeNewLogContext({ section: name }).info("Getting remote state")
     await git("remote", "update")
 
     const localCommitId = (await git("rev-parse", "HEAD"))[0]

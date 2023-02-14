@@ -125,12 +125,7 @@ export async function checkResourceStatuses(
   })
 }
 
-export async function checkResourceStatus(
-  api: KubeApi,
-  namespace: string,
-  manifest: KubernetesResource,
-  log: Log
-) {
+export async function checkResourceStatus(api: KubeApi, namespace: string, manifest: KubernetesResource, log: Log) {
   const handler = objHandlers[manifest.kind]
 
   if (manifest.metadata?.namespace) {
@@ -197,11 +192,11 @@ export async function waitForResources({
     ctx.events.emit("log", { timestamp: new Date().getTime(), data: Buffer.from(msg, "utf-8"), ...logEventContext })
 
   const waitingMsg = `Waiting for resources to be ready...`
-  const statusLine = log.makeNewLogContextWithMessage({
-    symbol: "info",
-    section: actionName,
-    msg: waitingMsg,
-  })
+  const statusLine = log
+    .makeNewLogContext({
+      section: actionName,
+    })
+    .info(waitingMsg)
   emitLog(waitingMsg)
 
   if (resources.length === 0) {

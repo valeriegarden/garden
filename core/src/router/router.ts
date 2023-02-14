@@ -163,7 +163,7 @@ export class ActionRouter extends BaseRouter {
     dependantsFirst?: boolean
     names?: string[]
   }) {
-    const servicesLog = log.makeNewLogContextWithMessage({ msg: chalk.white("Deleting deployments...") })
+    const servicesLog = log.makeNewLogContext({}).info(chalk.white("Deleting deployments..."))
 
     const deploys = graph.getDeploys({ names })
 

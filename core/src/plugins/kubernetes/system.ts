@@ -75,13 +75,14 @@ export async function getSystemGarden(
       variables,
     },
     commandInfo: ctx.command,
-    log: log.makeNewLogContextWithMessage({
-      section: "garden system",
-      level: LogLevel.debug,
-      msg: "Initializing...",
-      indent: 1,
-      fixLevel: true,
-    }),
+    log: log
+      .makeNewLogContext({
+        section: "garden system",
+        level: LogLevel.debug,
+        indent: 1,
+        fixLevel: true,
+      })
+      .info("Initializing..."),
   })
 }
 

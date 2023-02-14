@@ -94,11 +94,11 @@ export async function waitForResourcesWith({
   let loops = 0
   const startTime = new Date().getTime()
 
-  const statusLine = log.makeNewLogContextWithMessage({
-    symbol: "info",
-    section: resourcesType,
-    msg: `Waiting for resources to be ready...`,
-  })
+  const statusLine = log
+    .makeNewLogContext({
+      section: resourcesType,
+    })
+    .info(`Waiting for resources to be ready...`)
 
   const namespace = await getAppNamespace(ctx, log, provider)
 

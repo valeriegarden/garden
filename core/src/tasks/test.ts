@@ -62,10 +62,11 @@ export class TestTask extends ExecuteActionTask<TestAction, GetTestResult> {
     const testResult = status?.detail
 
     if (testResult && testResult.success) {
-      const passedEntry = this.log.makeNewLogContextWithMessage({
-        section: action.key(),
-        msg: chalk.green("Already passed"),
-      })
+      const passedEntry = this.log
+        .makeNewLogContext({
+          section: action.key(),
+        })
+        .info(chalk.green("Already passed"))
       passedEntry.setSuccess(chalk.green("Already passed"))
       return { ...status, executedAction: executeAction(action, { status }) }
     }
@@ -76,10 +77,11 @@ export class TestTask extends ExecuteActionTask<TestAction, GetTestResult> {
   async process({ dependencyResults }: ActionTaskProcessParams<TestAction, GetTestResult>) {
     const action = this.getResolvedAction(this.action, dependencyResults)
 
-    const taskLog = this.log.makeNewLogContextWithMessage({
-      section: action.key(),
-      msg: `Running...`,
-    })
+    const taskLog = this.log
+      .makeNewLogContext({
+        section: action.key(),
+      })
+      .info(`Running...`)
 
     const router = await this.garden.getActionRouter()
 

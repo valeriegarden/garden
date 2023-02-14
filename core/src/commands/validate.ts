@@ -43,7 +43,7 @@ export class ValidateCommand extends Command {
     }
 
     log.info("")
-    log.info(chalk.green("OK") + " " + printEmoji("heavy_check_mark"))
+    log.info(chalk.green("OK") + " " + printEmoji("heavy_check_mark", log))
 
     return {}
   }

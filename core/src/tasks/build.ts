@@ -44,10 +44,11 @@ export class BuildTask extends ExecuteActionTask<BuildAction, BuildStatus> {
       )
     }
 
-    let log = this.log.makeNewLogContextWithMessage({
-      section: this.getName(),
-      msg: `Building version ${this.version}...`,
-    })
+    let log = this.log
+      .makeNewLogContext({
+        section: this.getName(),
+      })
+      .info(`Building version ${this.version}...`)
 
     const files = action.getFullVersion().files
 

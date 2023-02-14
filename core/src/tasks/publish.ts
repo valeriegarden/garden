@@ -87,10 +87,11 @@ export class PublishTask extends BaseActionTask<BuildAction, PublishActionResult
       // TODO: validate the tag?
     }
 
-    const log = this.log.makeNewLogContextWithMessage({
-      section: action.key(),
-      msg: "Publishing with tag " + tag,
-    })
+    const log = this.log
+      .makeNewLogContext({
+        section: action.key(),
+      })
+      .info("Publishing with tag " + tag)
 
     const router = await this.garden.getActionRouter()
 

@@ -104,7 +104,7 @@ export async function configureProvider({
 export async function debugInfo({ ctx, log, includeProject }: GetDebugInfoParams): Promise<DebugInfo> {
   const k8sCtx = <KubernetesPluginContext>ctx
   const provider = k8sCtx.provider
-  const providerLog = log.makeNewLogContextWithMessage({ section: ctx.provider.name, msg: "collecting provider configuration" })
+  const providerLog = log.makeNewLogContext({ section: ctx.provider.name }).info("collecting provider configuration")
 
   const systemNamespace = await getSystemNamespace(ctx, provider, log)
   const systemMetadataNamespace = getSystemMetadataNamespaceName(provider.config)
@@ -115,7 +115,7 @@ export async function debugInfo({ ctx, log, includeProject }: GetDebugInfoParams
     namespacesList.push(appNamespace)
   }
   const namespaces = await Bluebird.map(namespacesList, async (ns) => {
-    const nsLog = providerLog.makeNewLogContextWithMessage({ section: ns, msg: "collecting namespace configuration" })
+    const nsLog = providerLog.makeNewLogContext({ section: ns }).info("collecting namespace configuration")
     const out = await kubectl(ctx, provider).stdout({
       log,
       args: ["get", "all", "--namespace", ns, "--output", "json"],
