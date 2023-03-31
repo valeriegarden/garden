@@ -335,17 +335,19 @@ export async function executeAction<T extends Action>({
   graph,
   action,
   log,
+  force,
 }: {
   garden: Garden
   graph: ConfigGraph
   action: T
   log: Log
+  force: boolean
 }): Promise<Executed<T>> {
   const task = getExecuteTaskForAction(action, {
     garden,
     graph,
     log,
-    force: true,
+    force,
   })
 
   const results = await garden.processTasks({ tasks: [task], log, throwOnError: true })

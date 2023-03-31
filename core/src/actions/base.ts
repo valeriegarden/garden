@@ -472,6 +472,7 @@ export abstract class BaseAction<C extends BaseActionConfig = BaseActionConfig, 
     const configVersion = this.configVersion()
     const versionString =
       versionStringPrefix + hashStrings([configVersion, this._treeVersion.contentHash, ...flatten(sortedDeps)])
+    console.log(this.name, this.kind, this.resolved, [{ configVersion, versionString }])
 
     return {
       configVersion,

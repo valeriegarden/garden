@@ -80,7 +80,8 @@ export class ExecCommand extends Command<Args, Opts> {
     const graph = await garden.getConfigGraph({ log, emit: false })
     const action = graph.getDeploy(serviceName)
 
-    const executed = await executeAction({ garden, graph, action, log })
+    const executed = await executeAction({ garden, graph, action, log, force: false })
+    const v = executed.versionString()
 
     const router = await garden.getActionRouter()
     const { result } = await router.deploy.exec({

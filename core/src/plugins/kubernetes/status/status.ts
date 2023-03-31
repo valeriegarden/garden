@@ -410,6 +410,11 @@ export async function compareDeployedResources(
       // The new manifest matches the last applied manifest
       if (lastAppliedHashed && (await hashManifest(manifest)) === lastAppliedHashed) {
         continue
+      } else {
+        console.log({
+          localManifestV: manifest.metadata.annotations[gardenAnnotationKey("version")],
+          deployedV: deployedResource.metadata.annotations[gardenAnnotationKey("version")],
+        })
       }
 
       // Fallback to comparing against kubectl's last-applied-configuration annotation

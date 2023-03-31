@@ -1077,12 +1077,22 @@ export class Garden {
     return resolveActions({ garden: this, actions, graph, log })
   }
 
-  async executeAction<T extends Action>({ action, graph, log }: { action: T; log: Log; graph?: ConfigGraph }) {
+  async executeAction<T extends Action>({
+    action,
+    graph,
+    log,
+    force,
+  }: {
+    action: T
+    log: Log
+    graph?: ConfigGraph
+    force: boolean
+  }) {
     if (!graph) {
       graph = await this.getConfigGraph({ log, emit: false })
     }
 
-    return executeAction({ garden: this, action, graph, log })
+    return executeAction({ garden: this, action, graph, log, force })
   }
 
   /**

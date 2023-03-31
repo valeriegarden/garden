@@ -587,7 +587,13 @@ describe("kubernetes Pod runner functions", () => {
         graph: helmGraph,
         action: helmGraph.getBuild("api-image"),
       })
-      await executeAction({ action: helmAction, graph: helmGraph, garden: helmGarden, log: helmGarden.log })
+      await executeAction({
+        action: helmAction,
+        graph: helmGraph,
+        garden: helmGarden,
+        log: helmGarden.log,
+        force: false,
+      })
 
       helmManifests = await getChartResources({
         ctx: helmCtx,

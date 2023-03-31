@@ -66,7 +66,7 @@ describe("plugins.container", () => {
     const graph = await garden.getConfigGraph({ emit: false, log })
     const build = graph.getBuild(cfg.name)
     const resolved = await garden.resolveAction({ action: build, graph, log })
-    return garden.executeAction({ action: resolved, graph, log })
+    return garden.executeAction({ action: resolved, graph, log, force: true })
   }
 
   describe("publishContainerBuild", () => {

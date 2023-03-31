@@ -233,7 +233,7 @@ describe("util", () => {
     it("should return the resource specified by the query", async () => {
       const rawAction = helmGraph.getDeploy("api")
       const action = await helmGarden.resolveAction<HelmDeployAction>({ action: rawAction, log: helmGarden.log })
-      await helmGarden.executeAction<DeployAction>({ action: rawAction, log: helmGarden.log })
+      await helmGarden.executeAction<DeployAction>({ action: rawAction, log: helmGarden.log, force: false })
       const manifests = await getChartResources({
         ctx,
         action,
