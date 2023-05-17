@@ -25,6 +25,8 @@ import AsyncLock from "async-lock"
 import { PluginContext } from "../plugin-context"
 import { LogLevel } from "../logger/logger"
 import { uuidv4 } from "./random"
+import hasAnsi from "has-ansi"
+import chalk from "chalk"
 
 const toolsPath = join(GARDEN_GLOBAL_PATH, "tools")
 const lock = new AsyncLock()
@@ -43,6 +45,11 @@ export interface ExecParams {
   ignoreError?: boolean
   stdout?: Writable
   stderr?: Writable
+  streamLogs?: {
+    ctx: PluginContext
+    print?: boolean
+    logLevel?: LogLevel
+  }
 }
 
 export interface SpawnParams extends ExecParams {
@@ -63,7 +70,7 @@ export class CliWrapper {
     return this.toolPath
   }
 
-  async exec({ args, cwd, env, log, timeoutSec, input, ignoreError, stdout, stderr }: ExecParams) {
+  async exec({ args, cwd, env, log, timeoutSec, input, ignoreError, stdout, stderr, streamLogs }: ExecParams) {
     const path = await this.ensurePath(log)
 
     if (!args) {
@@ -74,6 +81,33 @@ export class CliWrapper {
     }
 
     log.silly(`Execing '${path} ${args.join(" ")}' in ${cwd}`)
+
+    if (streamLogs) {
+      const logEventContext = {
+        origin: this.name,
+        log: log.createLog({ fixLevel: streamLogs.logLevel || LogLevel.verbose }),
+      }
+
+      const outputStream = split2()
+      outputStream.on("error", () => {})
+      outputStream.on("data", (data: Buffer) => {
+        const msg = data.toString()
+
+        if (streamLogs.print) {
+          logEventContext.log.info(hasAnsi(msg) ? msg : chalk.white(msg))
+        }
+
+        streamLogs.ctx.events.emit("log", {
+          level: "verbose",
+          timestamp: new Date().toISOString(),
+          msg,
+          ...logEventContext,
+        })
+      })
+
+      stdout = outputStream
+      stderr = outputStream
+    }
 
     return exec(path, args, {
       cwd,
