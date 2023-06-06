@@ -308,6 +308,7 @@ export async function resolveRequest({
   globalConfigStore,
   request,
   inheritedOpts,
+  commandLogLevel,
 }: {
   log: Log
   manager: GardenInstanceManager
@@ -315,6 +316,7 @@ export async function resolveRequest({
   globalConfigStore: GlobalConfigStore
   request: BaseServerRequest
   inheritedOpts?: Partial<ParameterValues<GlobalOptions>>
+  commandLogLevel?: LogLevel
 }) {
   function fail(code: number, message: string, detail?: string) {
     return { error: { code, message, detail } }
@@ -401,7 +403,13 @@ export async function resolveRequest({
     // TODO: Consider using a logger that logs at the silly level but doesn't emit anything.
     serverLogger = new VoidLogger({ level: LogLevel.info })
   } else {
-    serverLogger = command?.getServerLogger() || new ServerLogger({ rootLogger: log.root, level: log.root.level })
+    serverLogger =
+      command?.getServerLogger() ||
+      new ServerLogger({
+        rootLogger: log.root,
+        level: log.root.level,
+        terminalLevel: commandLogLevel || LogLevel.silly,
+      })
   }
 
   const cmdLog = serverLogger.createLog({})

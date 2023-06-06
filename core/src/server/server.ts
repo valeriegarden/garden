@@ -82,6 +82,7 @@ interface GardenServerParams {
   defaultProjectRoot: string
   serveCommand: ServeCommand
   port?: number
+  commandLogLevel?: LogLevel
 }
 
 interface ServerConnection {
@@ -117,6 +118,7 @@ export class GardenServer extends EventEmitter {
   private log: Log
   private debugLog: Log
   private statusLog: Log
+  private commandLogLevel: LogLevel
 
   private server: Server
   private app: websockify.App
@@ -136,7 +138,7 @@ export class GardenServer extends EventEmitter {
   public readonly authKey: string
   public readonly sessionId: string
 
-  constructor({ log, manager, port, defaultProjectRoot, serveCommand }: GardenServerParams) {
+  constructor({ log, manager, port, defaultProjectRoot, serveCommand, commandLogLevel }: GardenServerParams) {
     super()
     this.log = log
     this.debugLog = this.log.createLog({ fixLevel: LogLevel.debug })
@@ -150,6 +152,7 @@ export class GardenServer extends EventEmitter {
     this.incomingEvents = new EventBus()
     this.activePersistentRequests = {}
     this.serveCommand = serveCommand
+    this.commandLogLevel = commandLogLevel || LogLevel.silly
   }
 
   async start() {
@@ -246,6 +249,7 @@ export class GardenServer extends EventEmitter {
         manager: this.manager,
         defaultProjectRoot: this.defaultProjectRoot,
         globalConfigStore: this.globalConfigStore,
+        commandLogLevel: this.commandLogLevel,
       })
 
       if (result.error) {
@@ -261,7 +265,7 @@ export class GardenServer extends EventEmitter {
       if (error.status) {
         throw error
       }
-      this.log.error({ error })
+      this.log.error({ msg: error.message, error })
       return ctx.throw(500, `Unable to process request: ${error.message}`)
     }
   }
@@ -290,6 +294,8 @@ export class GardenServer extends EventEmitter {
      * means we can keep a consistent format across mechanisms.
      */
     http.post("/api", async (ctx) => {
+      this.debugLog.debug(`Received request: ${JSON.stringify(ctx.request.body)}`)
+
       const { garden, command, log, args, opts } = await this.resolveRequest(ctx, ctx.request.body)
 
       if (!command) {
@@ -309,6 +315,8 @@ export class GardenServer extends EventEmitter {
         return ctx.throw(400, "Attempted to run persistent command (e.g. a dev/follow command). Aborting.")
       }
 
+      this.debugLog.debug(`Running command '${command.name}'`)
+
       await command.prepare(prepareParams)
 
       ctx.status = 200
@@ -320,6 +328,7 @@ export class GardenServer extends EventEmitter {
           sessionId: uuidv4(),
           parentSessionId: this.sessionId,
         })
+        this.debugLog.debug(`Command '${command.name}' completed successfully`)
 
         ctx.response.body = sanitizeValue(result)
       } catch (error) {
