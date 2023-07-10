@@ -47,6 +47,7 @@ export interface ExecParams {
   stderr?: Writable
   streamLogs?: {
     ctx: PluginContext
+    emitEvent?: boolean
     print?: boolean
     logLevel?: LogLevel
   }
@@ -88,6 +89,9 @@ export class CliWrapper {
         log: log.createLog({ fixLevel: streamLogs.logLevel || LogLevel.verbose }),
       }
 
+      // Default to emitting log events here.
+      const emitEvent = streamLogs.emitEvent === undefined ? true : streamLogs.emitEvent
+
       const outputStream = split2()
       outputStream.on("error", () => {})
       outputStream.on("data", (data: Buffer) => {
@@ -97,12 +101,14 @@ export class CliWrapper {
           logEventContext.log.info(hasAnsi(msg) ? msg : chalk.white(msg))
         }
 
-        streamLogs.ctx.events.emit("log", {
-          level: "verbose",
-          timestamp: new Date().toISOString(),
-          msg,
-          ...logEventContext,
-        })
+        if (emitEvent) {
+          streamLogs.ctx.events.emit("log", {
+            level: "verbose",
+            timestamp: new Date().toISOString(),
+            msg,
+            ...logEventContext,
+          })
+        }
       })
 
       stdout = outputStream
