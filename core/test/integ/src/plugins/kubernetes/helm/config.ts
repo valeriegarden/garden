@@ -64,6 +64,8 @@ describe("configureHelmModule", () => {
         paths: [
           {
             mode: "two-way",
+            defaultDirectoryMode: 755,
+            defaultFileMode: 644,
             source: ".",
             target: "/app",
           },

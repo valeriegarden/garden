@@ -264,6 +264,8 @@ describe("sync mode deployments and sync behavior", () => {
             mode: "two-way",
             sourcePath: join(module.path, "src"),
             containerPath: "/app/src",
+            defaultDirectoryMode: 755,
+            defaultFileMode: 644,
           },
         ],
       })
@@ -387,6 +389,8 @@ describe("sync mode deployments and sync behavior", () => {
               name: "foo",
             },
             mode: "two-way",
+            defaultDirectoryMode: 755,
+            defaultFileMode: 644,
             sourcePath: join(action.basePath(), "src"),
             containerPath: "/app/src",
           },

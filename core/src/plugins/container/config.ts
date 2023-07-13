@@ -194,8 +194,9 @@ export const syncDefaultFileModeSchema = memoize(() =>
     .number()
     .min(0)
     .max(777)
+    .default(644)
     .description(
-      "The default permission bits, specified as an octal, to set on files at the sync target. Defaults to 0600 (user read/write). " +
+      "The default permission bits, specified as an octal, to set on files at the sync target. Defaults to 0644 (user can read/write, everyone else can read). " +
         permissionsDocs
     )
 )
@@ -205,8 +206,9 @@ export const syncDefaultDirectoryModeSchema = memoize(() =>
     .number()
     .min(0)
     .max(777)
+    .default(755)
     .description(
-      "The default permission bits, specified as an octal, to set on directories at the sync target. Defaults to 0700 (user read/write). " +
+      "The default permission bits, specified as an octal, to set on directories at the sync target. Defaults to 0755 (user can read/write, everyone else can read). " +
         permissionsDocs
     )
 )
